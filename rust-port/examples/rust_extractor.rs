@@ -12,6 +12,10 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 
 const ENCODE_END_GAME: u8 = 15;
+const ENCODE_END_MARKER: u8 = 14;
+const ENCODE_START_MARKER: u8 = 13;
+const ENCODE_COMMENT: u8 = 12;
+const ENCODE_NAG: u8 = 11;
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -541,20 +545,30 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     let is_white = fen_to_use.contains(" w ");
     
     // Parse moves with variations, NAGs, and comments
+    // First pass: parse moves and find where comment data starts
+    let mut comment_count = 0;
+    let comments_start = count_moves_and_comments(data, pos, &mut decoder.clone(), &mut comment_count).ok()?;
+    
+    // Reset decoder
+    decoder = MoveDecoder::from_fen(&fen_to_use).ok()?;
+    
+    // Second pass: parse moves and insert comments
     let mut output = Vec::new();
-    let mut comment_positions = Vec::new();
-    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output, &mut comment_positions, false) {
-        Ok(comments_start_pos) => {
-            // Read comments from end of game data
-            if !comment_positions.is_empty() {
-                let comments = read_comments(data, comments_start_pos, comment_positions.len());
-                insert_comments(&mut output, &comment_positions, &comments);
-            }
-            
+    let mut comment_reader = CommentReader::new(data, comments_start);
+    match decode_variation_with_comments_v2(data, pos, &mut decoder, is_white, starting_move_num, &mut output, &mut comment_reader, false) {
+        Ok(_) => {
             if output.is_empty() {
                 None
             } else {
-                Some(output.join(" "))
+                // Join output, handling special case of pre-game comments
+                let result = if !output.is_empty() && output[0].ends_with("} ") {
+                    // First element is pre-game comment with trailing space
+                    // Replace first join space with newline
+                    format!("{}\n{}", output[0], output[1..].join(" "))
+                } else {
+                    output.join(" ")
+                };
+                Some(result)
             }
         }
         Err(e) => {
@@ -564,14 +578,115 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     }
 }
 
-fn decode_variation(
+struct CommentReader<'a> {
+    data: &'a [u8],
+    pos: usize,
+}
+
+impl<'a> CommentReader<'a> {
+    fn new(data: &'a [u8], start_pos: usize) -> Self {
+        CommentReader { data, pos: start_pos }
+    }
+    
+    fn read_next(&mut self) -> String {
+        if self.pos >= self.data.len() {
+            return String::new();
+        }
+        
+        let comment_start = self.pos;
+        while self.pos < self.data.len() && self.data[self.pos] != 0 {
+            self.pos += 1;
+        }
+        
+        let comment_bytes = &self.data[comment_start..self.pos];
+        let comment = String::from_utf8_lossy(comment_bytes).to_string();
+        
+        if self.pos < self.data.len() {
+            self.pos += 1; // Skip null terminator
+        }
+        
+        comment
+    }
+}
+
+fn count_moves_and_comments(
+    data: &[u8],
+    start_pos: usize,
+    decoder: &mut MoveDecoder,
+    comment_count: &mut usize,
+) -> Result<usize, String> {
+    let mut pos = start_pos;
+    let mut nest_level = 0;
+    
+    while pos < data.len() {
+        let byte_val = data[pos];
+        
+        if byte_val == ENCODE_END_GAME {
+            pos += 1;
+            if nest_level == 0 {
+                return Ok(pos);
+            }
+        } else if byte_val == ENCODE_END_MARKER {
+            pos += 1;
+            if nest_level > 0 {
+                nest_level -= 1;
+            }
+            // Don't return here - END_MARKER just closes a variation, not the game
+        } else if byte_val == ENCODE_START_MARKER {
+            pos += 1;
+            nest_level += 1;
+        } else if byte_val >= 11 && byte_val <= 15 {
+            if byte_val == 11 { // NAG
+                pos += 2;
+            } else if byte_val == 12 { // COMMENT
+                *comment_count += 1;
+                pos += 1;
+            } else {
+                pos += 1;
+            }
+        } else {
+            // Regular move
+            let piece_num = byte_val >> 4;
+            let val = byte_val & 15;
+            
+            let piece_list = decoder.get_piece_list();
+            let needs_second_byte = if (piece_num as usize) < piece_list.len() {
+                let from_sq = piece_list[piece_num as usize];
+                if let Some(piece) = decoder.get_board().piece_at(from_sq) {
+                    piece.role == shakmaty::Role::Queen && val as u8 == from_sq.file() as u8
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            
+            let next_byte = if needs_second_byte && pos + 1 < data.len() {
+                Some(data[pos + 1])
+            } else {
+                None
+            };
+            
+            if let Ok(mv) = decoder.decode_move(byte_val, next_byte) {
+                decoder.apply_move(&mv).ok();
+                pos += if needs_second_byte { 2 } else { 1 };
+            } else {
+                pos += 1;
+            }
+        }
+    }
+    
+    Ok(pos)
+}
+
+fn decode_variation_with_comments_v2(
     data: &[u8],
     start_pos: usize,
     decoder: &mut MoveDecoder,
     mut is_white: bool,
     mut move_num: usize,
     output: &mut Vec<String>,
-    comment_positions: &mut Vec<usize>,
+    comment_reader: &mut CommentReader,
     initial_force_move_number: bool,
 ) -> Result<usize, String> {
     let mut pos = start_pos;
@@ -598,9 +713,19 @@ fn decode_variation(
                         pos += 1;
                     }
                 }
-                12 => { // COMMENT - mark position for later
+                12 => { // COMMENT - read immediately
                     pos += 1;
-                    comment_positions.push(output.len());
+                    let comment = comment_reader.read_next();
+                    if !output.is_empty() {
+                        // Append comment to last move
+                        if let Some(last) = output.last_mut() {
+                            last.push_str(&format!(" {{{}}}", comment));
+                        }
+                    } else {
+                        // Pre-game comment - C++ format is "{comment} \n"
+                        // When we join(), the newline will be kept, and next element gets space before it
+                        output.push(format!("{{{}}} ", comment));
+                    }
                 }
                 13 => { // START_MARKER - variation
                     pos += 1;
@@ -635,7 +760,7 @@ fn decode_variation(
                     
                     // Parse variation with position BEFORE last move
                     let mut var_output = Vec::new();
-                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output, comment_positions, true)?;
+                    pos = decode_variation_with_comments_v2(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output, comment_reader, true)?;
                     
                     // Output variation in parentheses
                     if !var_output.is_empty() {
@@ -722,38 +847,3 @@ fn decode_variation(
     Ok(pos)
 }
 
-fn read_comments(data: &[u8], start_pos: usize, num_comments: usize) -> Vec<String> {
-    let mut comments = Vec::new();
-    let mut pos = start_pos;
-    
-    for _ in 0..num_comments {
-        if pos >= data.len() {
-            break;
-        }
-        
-        // Read null-terminated string
-        let comment_start = pos;
-        while pos < data.len() && data[pos] != 0 {
-            pos += 1;
-        }
-        
-        let comment_bytes = &data[comment_start..pos];
-        let comment = String::from_utf8_lossy(comment_bytes).to_string();
-        comments.push(comment);
-        
-        if pos < data.len() {
-            pos += 1; // Skip null terminator
-        }
-    }
-    
-    comments
-}
-
-fn insert_comments(output: &mut Vec<String>, positions: &[usize], comments: &[String]) {
-    // Insert comments at specified positions in reverse order to maintain indices
-    for (comment_idx, &output_idx) in positions.iter().enumerate().rev() {
-        if comment_idx < comments.len() && output_idx <= output.len() {
-            output.insert(output_idx, format!("{{{}}}", comments[comment_idx]));
-        }
-    }
-}
