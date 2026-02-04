@@ -1,0 +1,38 @@
+# Makefile for SCID extractor tool
+
+CXX = g++
+CXXFLAGS = -O2 -Wall -I../src -I/usr/include/tcl8.6 -I/usr/include/tk8.6
+LDFLAGS = -lz -ltcl8.6 -ltk8.6
+
+# SCID source directory
+SCID_SRC = ../src
+
+# Object files from SCID
+SCID_OBJS = \
+	$(SCID_SRC)/index.o \
+	$(SCID_SRC)/namebase.o \
+	$(SCID_SRC)/gfile.o \
+	$(SCID_SRC)/game.o \
+	$(SCID_SRC)/position.o \
+	$(SCID_SRC)/bytebuf.o \
+	$(SCID_SRC)/stored.o \
+	$(SCID_SRC)/movelist.o \
+	$(SCID_SRC)/mfile.o \
+	$(SCID_SRC)/misc.o \
+	$(SCID_SRC)/date.o \
+	$(SCID_SRC)/matsig.o \
+	$(SCID_SRC)/textbuf.o \
+	$(SCID_SRC)/dstring.o \
+	$(SCID_SRC)/stralloc.o \
+	$(SCID_SRC)/pgnparse.o \
+	$(SCID_SRC)/myassert.o
+
+all: scid_extractor
+
+scid_extractor: scid_extractor.cpp $(SCID_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ scid_extractor.cpp $(SCID_OBJS) $(LDFLAGS)
+
+clean:
+	rm -f scid_extractor
+
+.PHONY: all clean

@@ -1,0 +1,393 @@
+
+####################
+# Game Browser window
+
+namespace eval ::gbrowser {}
+
+proc ::gbrowser::new {base gnum {ply -1} {w {}}} {
+
+  # If $w is given, it is a toplevel already created which we will use
+  # this allows for the new first/prev/next/last buttons
+
+  # Hack to stop the gnext button from using ply after treeBest has been destroyed
+  # but the use of ply in the browser should probably be checked S.A.
+  # if {![winfo exists .treeBest$base]} { set ply 0 }
+
+  set gnum [string trim $gnum]
+  set n 0
+
+  if {$base < 1} { set base [sc_base current] }
+  if {$gnum < 1} { set gnum [sc_game number] }
+
+  if {![checkBaseInUse $base $w]} {
+    return
+  }
+
+  ### if too large, load the last game
+  if {$gnum > [sc_base numGames $base]} {
+    set gnum [sc_base numGames $base]
+  }
+  
+  set filename [file tail [sc_base filename $base]]
+  if {[catch {set header [sc_game summary -base $base -game $gnum header]}]} {
+    return
+  }
+
+  set offset [string first { -- } $header]
+  set white [string trim [string range $header 0 $offset]]
+  incr offset 4
+  set black [string trim [string range $header $offset [string first "\n" $header $offset]]]
+
+  if {$w == {}} {
+    ### Init browser window
+    while {[winfo exists .gb$n]} { incr n }
+    set w .gb$n
+    toplevel $w
+    wm withdraw $w
+    wm resizable $w 1 0
+
+    pack [frame $w.b] -side bottom -fill x
+
+    ::board::new $w.bd $::gbrowser::size 1 [::board::isFlipped] 1 $::gbrowser::showEval
+    # $w.bd configure -relief solid -borderwidth 1
+    pack $w.bd -side left -padx 4 -pady 4
+
+    autoscrollframe $w.t text $w.t.text -wrap word \
+      -width 40 -height 12 -font font_Small -setgrid 1
+    pack $w.t -side right -fill both -expand yes
+
+    set t $w.t.text
+    $t configure -cursor {}
+    event generate $t <ButtonRelease-1>
+    $t tag configure header -foreground $::pgnColor(Header)
+    $t tag configure Current -background $::pgnColor(Current)
+    $t tag configure commentTag -fore $::pgnColor(Comment)
+
+    bind $w <F1> {helpWindow GameList Browsing}
+    bind $w <Escape> "destroy $w"
+    bind $w <Home> "::gbrowser::update $n start"
+    bind $w <End> "::gbrowser::update $n end"
+    bind $w <Left> "::gbrowser::update $n -1"
+    bind $w <Right> "::gbrowser::update $n +1"
+    bind $w <Up> "::gbrowser::update $n -10"
+    bind $w <Down> "::gbrowser::update $n +10"
+    bind $w <Control-Shift-Left> "::board::resize $w.bd -1"
+    bind $w <Control-Shift-Right> "::board::resize $w.bd +1"
+    bind $w <Control-S> "::board::toggleeval $w.bd"
+    bind $w <Control-f> "::board::flip .gb$n.bd"
+
+    if {$::windowsOS || $::macOS} {
+      bind $w <MouseWheel> "
+	if {\[expr -%D\] < 0} \"::gbrowser::update $n -1\"
+	if {\[expr -%D\] > 0} \"::gbrowser::update $n +1\"
+      "
+      bind $w <Control-MouseWheel> "
+       if {\[expr -%D\] < 0} \"::board::resize $w.bd +1\"
+       if {\[expr -%D\] > 0} \"::board::resize $w.bd -1\"
+      "
+    } else {
+      bind $w <Button-4> "::gbrowser::update $n -1"
+      bind $w <Button-5> "::gbrowser::update $n +1"
+      bind $w <Control-Button-4> "::board::resize $w.bd +1"
+      bind $w <Control-Button-5> "::board::resize $w.bd -1"
+      # Handle wheelmouse in text widget
+      bind $w.t.text <Button-4> "::gbrowser::update $n -1 ; break"
+      bind $w.t.text <Button-5> "::gbrowser::update $n +1 ; break"
+      bind $w.t.text <Control-Button-4> "::board::resize $w.bd +1 ; break"
+      bind $w.t.text <Control-Button-5> "::board::resize $w.bd -1 ; break"
+    }
+
+    button $w.b.start -image tb_start -command "::gbrowser::update $n start" -relief flat
+    button $w.b.back -image tb_prev -command "::gbrowser::update $n -1" -relief flat
+    button $w.b.forward -image tb_next -command "::gbrowser::update $n +1" -relief flat
+    button $w.b.end -image tb_end -command "::gbrowser::update $n end" -relief flat
+    button $w.b.autoplay -image autoplay_off -command "::gbrowser::autoplay $n" -relief flat
+    button $w.b.flip -image tb_flip -command "::board::flip .gb$n.bd" -relief flat
+
+    # hack to center the lower button bar
+    # set width [expr [winfo reqwidth $w.bd] - [winfo reqwidth $w.b.start]*6]
+
+    pack [frame $w.b.gap -width 20] $w.b.start $w.b.back $w.b.forward $w.b.end \
+      $w.b.autoplay $w.b.flip -side left -padx 3 -pady 1
+
+    set ::gbrowser::autoplay($n) 0
+
+    dialogbutton $w.b.load -textvar ::tr(LoadGame) -command "::gbrowser::LoadGame $w $base $gnum $n"
+
+    # Control click doesn't close browser window
+    bind $w.b.load <Control-Button-1> "::gbrowser::LoadGame $w $base $gnum $n 0 ; break"
+
+    dialogbutton $w.b.merge -textvar ::tr(MergeGame) -command "mergeGame $base $gnum"
+
+    # Behaviour of ply is a little confusing, but we need it for when we want to 'Load' the current position into the main board
+    # It is generally "-1", and gets its value from sc_filter
+    # The gnext/gprev buttons below will also set it explicitly
+
+    if {$ply < 0} {
+      if {$gnum > 0} {
+	set ply [sc_filter ply $gnum $base]
+	if {$ply > 0} { incr ply -1 }
+      } else {
+        set ply 0
+      }
+    }
+
+    button $w.b.first -image tb_gfirst -relief flat -command "::gbrowser::load $w $base $gnum $ply 1"
+    button $w.b.prev -image tb_gprev -relief flat -command   "::gbrowser::load $w $base $gnum $ply -1"
+    button $w.b.next -image tb_gnext -relief flat -command   "::gbrowser::load $w $base $gnum $ply +1"
+    button $w.b.last -image tb_glast -relief flat -command   "::gbrowser::load $w $base $gnum $ply end"
+    dialogbutton $w.b.close -textvar ::tr(Close) -command "destroy $w"
+
+    pack $w.b.close $w.b.last $w.b.next $w.b.prev $w.b.first -side right -padx 1 -pady 1
+    pack $w.b.merge $w.b.load -side right -padx 1 -pady 1
+
+    bind $w <Control-Up> "$w.b.prev invoke"
+    bind $w <Control-Down> "$w.b.next invoke"
+    bind $w <Control-Home> "$w.b.first invoke"
+    bind $w <Control-End> "$w.b.last invoke"
+
+    # bind $w <Configure> "recordWinSize $w"
+    wm state $w normal
+
+  } else {
+    # Already have a browser window toplevel
+    # so just delete the old pgn text, and configure the buttons for their new meaning
+
+    scan $w {.gb%i} n
+    set t $w.t.text
+    $t configure -state normal
+    $t delete 0.0 end
+
+    $w.b.first configure -command "::gbrowser::load $w $base $gnum $ply 1"
+    $w.b.prev configure -command   "::gbrowser::load $w $base $gnum $ply -1"
+    $w.b.next configure -command   "::gbrowser::load $w $base $gnum $ply +1"
+    $w.b.last configure -command   "::gbrowser::load $w $base $gnum $ply end"
+
+    $w.b.load configure -command "::gbrowser::LoadGame $w $base $gnum $n"
+    bind $w.b.load <Control-Button-1> "::gbrowser::LoadGame $w $base $gnum $n 0 ; break"
+
+    $w.b.merge configure -command "mergeGame $base $gnum"
+  }
+
+# no longer flip for ::myPlayerNames
+if {0} {
+  foreach pattern $::myPlayerNames {
+    if {[string match $pattern $white]} {
+      ::board::flip $w.bd 0
+      break
+    }
+    if {[string match $pattern $black]} {
+      ::board::flip $w.bd 1
+      break
+    }
+  }
+}
+
+  # The gnum is stored in title, and also used later 
+  wm title $w "game $gnum ($filename)"
+  set ::gbrowser::boards($n) [sc_game summary -base $base -game $gnum boards]
+  set moves [sc_game summary -base $base -game $gnum moves]
+
+  $t insert end "$header" header
+
+  # Player tags *hack*
+  # Find Playernames in the text, removing elos. offset is set above when finding "--"
+  if {[string match {* ([0-9][0-9][0-9][0-9])} $white] || [string match {* ([0-9][0-9][0-9])} $white]} {
+    set white [string range $white 0 [expr [string last " (" $white] - 1]]
+  }
+  if {[string match {* ([0-9][0-9][0-9][0-9])} $black] || [string match {* ([0-9][0-9][0-9])} $black]} {
+    set black [string range $black 0 [expr [string last " (" $black] - 1]]
+  }
+
+  $t tag add White 1.0 1.[string length $white]
+  $t tag bind White <ButtonRelease-1> [list playerInfo $white raise]
+  $t tag bind White <Any-Enter> "$t configure -cursor hand2"
+  $t tag bind White <Any-Leave> "$t configure -cursor {}"
+
+  $t tag add Black 1.$offset 1.[expr $offset + [string length $black]]
+  $t tag bind Black <ButtonRelease-1> [list playerInfo $black raise]
+  $t tag bind Black <Any-Enter> "$t configure -cursor hand2"
+  $t tag bind Black <Any-Leave> "$t configure -cursor {}"
+
+  $t insert end "\n\n"
+
+  set m 1
+
+  set initialComment [lindex $moves 0]
+  if {$initialComment != ""} {
+    $t insert end "$initialComment " commentTag
+  }
+
+  foreach {i j} [lrange $moves 1 end-1] {
+    set moveTag m$m
+    $t insert end [::trans $i] $moveTag
+    $t insert end " "
+    $t tag bind $moveTag <ButtonRelease-1> "::gbrowser::update $n $m"
+    $t tag bind $moveTag <Any-Enter> "$t tag configure $moveTag -underline 1"
+    $t tag bind $moveTag <Any-Leave> "$t tag configure $moveTag -underline 0"
+    incr m
+    if {$j != ""} {
+      $t insert end "[string map {"\n" { }} $j] " commentTag
+    }
+  }
+
+  # result
+  $t insert end [lindex $moves end] header
+
+  ::gbrowser::update $n $ply
+}
+
+proc ::gbrowser::load {w base gnum ply n} {
+  global tree
+
+  # The behaviour changes according to whether .treeBest$base exists or not
+  if {![checkBaseInUse $base $w]} {
+    return
+  }
+
+  if {[winfo exists .treeBest$base]} {
+
+    ### best games
+
+    set newgame $gnum
+    set index [lsearch $tree(bestList$base) $gnum]
+    set max [llength $tree(bestList$base)]
+    if {$index == -1} {
+      # oops - best games list may have changed, so load first game
+      set n 1
+    }
+
+    switch -- $n {
+      1 {
+	 set newgame [lindex $tree(bestList$base) 0]
+      }
+      -1 {
+	 if {$index > 0} {
+	   incr index -1
+	   set newgame [lindex $tree(bestList$base) $index]
+	 }
+      }
+      +1 {
+	 incr index 1
+	 if {$index < $max} {
+	   set newgame [lindex $tree(bestList$base) $index]
+	 }
+      }
+      end {
+	   set newgame [lindex $tree(bestList$base) end]
+      }
+      default {
+	 puts "::gbrowser::load: bad variable 'n'"
+	 set newgame 1
+      }
+   }
+  } else {
+    set newgame $gnum
+
+    ### should these 1, -1 +1 end , be replaced with first, prev,next end
+    ### but would need major changes to this file
+
+    switch -- $n {
+      1 {
+	 set newgame [sc_filter first]
+      }
+      -1 {
+	 if {$gnum > 1} {
+	   set newgame [sc_filter prev [expr $gnum - 1]]
+	 }
+      }
+      +1 {
+	 set newgame [sc_filter next [expr $gnum - 1]]
+      }
+      end {
+	 set newgame [sc_filter last]
+      }
+      default {
+	 puts "::gbrowser::load: bad variable 'n'"
+	 set newgame 1
+      }
+   }
+  }
+
+  if {$newgame < 1} {
+    # sc_filter next/prev failed
+    set newgame $gnum
+  }
+
+  # Only load newgame if different to oldgame
+  # (old game number is stored in wm title)
+  if { [scan [wm title $w] {game %d}] != $newgame } {
+    set ply [sc_filter ply $gnum $base]
+    if {$ply > 0} { incr ply -1 }
+
+    ::gbrowser::new $base $newgame $ply $w
+  }
+}
+
+proc ::gbrowser::update {n ply} {
+  set w .gb$n
+  if {! [winfo exists $w]} { return }
+  set oldply 0
+  if {[info exists ::gbrowser::ply($n)]} { set oldply $::gbrowser::ply($n) }
+  # if {$ply == "forward"} { set ply [expr {$oldply + 1} ] }
+  # if {$ply == "back"} { set ply [expr {$oldply - 1} ] }
+  if {$ply == "start"} { set ply 0 }
+  if {$ply == "end"} { set ply 9999 }
+  if {[string index $ply 0] == "-"  ||  [string index $ply 0] == "+"} {
+    set ply [expr {$oldply + $ply} ]
+  }
+  if {$ply < 0} { set ply 0 }
+  set max [expr {[llength $::gbrowser::boards($n)] - 1} ]
+  if {$ply > $max} { set ply $max }
+  set ::gbrowser::ply($n) $ply
+  set board [lindex $::gbrowser::boards($n) $ply]
+  ::board::update $w.bd $board 1 analyze
+
+  set t $w.t.text
+  $t configure -state normal
+  $t tag remove Current 1.0 end
+  set moveRange [$t tag nextrange m$ply 1.0]
+  if {[llength $moveRange] == 2} {
+    $t tag add Current [lindex $moveRange 0] [lindex $moveRange 1]
+    $t see [lindex $moveRange 0]
+  }
+  $t configure -state disabled
+
+  if {$::gbrowser::autoplay($n)} {
+    if {$ply >= $max} {
+      ::gbrowser::autoplay $n
+    } else {
+      after cancel "::gbrowser::update $n +1"
+      after $::autoplayDelay "::gbrowser::update $n +1"
+    }
+  }
+}
+
+proc ::gbrowser::autoplay {n} {
+  if {$::gbrowser::autoplay($n)} {
+    set ::gbrowser::autoplay($n) 0
+    after cancel "::gbrowser::update $n +1"
+    .gb$n.b.autoplay configure -image autoplay_off
+    return
+  } else {
+    set ::gbrowser::autoplay($n) 1
+    .gb$n.b.autoplay configure -image autoplay_on
+    ::gbrowser::update $n +1
+  }
+}
+
+proc ::gbrowser::LoadGame {w base gnum n {close 1}} {
+    if {![checkBaseInUse $base $w]} {
+      return
+    }
+    sc_base switch $base
+    if {[::game::Load $gnum 0] != -1} {
+      set flipped [::board::isFlipped $w.bd]
+      if {$close} {
+        destroy $w
+      }
+      sc_move ply $::gbrowser::ply($n)
+      ::board::flip .main.board $flipped
+      updateBoard -pgn
+    }
+}

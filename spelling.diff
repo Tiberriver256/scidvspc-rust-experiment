@@ -1,0 +1,186 @@
+--- 2	2024-05-11 16:15:12.000000000 +1000
++++ spelling.ssp	2024-05-11 16:04:26.000000000 +1000
+@@ -3,6 +3,8 @@
+ # Spellcheck file for Scid with the
+ # FIDE ratings Apr-2024 Last modified at 02.04.2024
+ #
++# Modified for Scid vs. PC by Stevenaaus, 03/06/2021
++#
+ # Copyright (C) 2001-2015.
+ # Franz Nagl
+ # Heinz van Saanen
+@@ -105,6 +107,15 @@
+ @PLAYER "., -_*"
+ 
+ ### START OF PLAYER SECTION
++# Remove common Titles from prefixes
++%Prefix "GM " ""
++%Prefix "IM " ""
++%Prefix "FM " ""
++%Prefix "CM " ""
++%Prefix "WGM " ""
++
++%Prefix " " ""
++%Suffix " " ""
+ 
+ A, L M Wayes Faruki #-  BAN [1648] 2015 
+   %Bio FIDEID 10257853
+@@ -37674,6 +37685,7 @@
+   %Bio FIDE World Champion 2000-2002
+   %Bio World Champion 2007-2013
+   %Bio FIDEID 5000017
++  = Anand, V
+ Anand-ochir, Khurelbaatar #-  MGL [1627] 2015 
+   %Bio FIDEID 4924541
+ Anand A #-  IND [1483] 1999 i
+@@ -79306,6 +79318,8 @@
+   %Bio FIDEID 651014602
+ Baron, Marek #-  GER [1966] 1972 i
+   %Bio FIDEID 16208196
++Baron, Michael #fm  AUS [2352] 1976
++  %Bio FIDEID 3202283
+ Baron, Maria Camila #-  COL [1780] 1999 wi
+   %Bio FIDEID 4418140
+ Baron, Marian-Ovidiu #- FRA [....] ???? 
+@@ -90402,6 +90416,7 @@
+ Bellin, Jana M #WGM ENG [1992] 1947 w
+   %Bio FIDEID 402168
+   = Hartston-Miles-Bellin, Jana M
++  = Hartston, Jana
+   = Miles2, Jana
+   = Bellin, Jana
+   = Malypetrova, Jana
+@@ -113747,6 +113762,8 @@
+   %Bio FIDEID 26082160
+ Bonhomme, Marcel #-  FRA [1602] 1960 
+   %Bio FIDEID 45153795
++Bonham, Kevin #-   AUS [1910] 1972
++  %Bio FIDEID 3205649
+ Bonhomme, Pierre #-  FRA [1483] 2001 i
+   %Bio FIDEID 651089734
+ Bonhommeau Thome, Elias #-  FRA [1421] 2010 i
+@@ -303107,6 +303124,7 @@
+   %Bio FIDEID 2800713
+ Gluzman, Mikhail #IM AUS [2403] 1967 i
+   %Bio FIDEID 3201783
++  = Gluzman, Michael
+ Gluzman, Sam #-  AUS [1851] 1998 i
+   %Bio FIDEID 3215210
+ Glyakin, Andrei #-  RUS [1736] 2003 i
+@@ -342052,6 +342070,7 @@
+   %Bio FIDEID 400262
+   = Hartston, William Roland
+   = Hartston, W R
++  = Hartston
+ Hartung, Christian, Dr. #-  GER [1845] 1960 
+   %Bio FIDEID 16252829
+ Hartung, Franko #-  GER [1862] 1962 
+@@ -366002,6 +366021,7 @@
+ Hughes, Steve #-  USA [2116] 1961 i
+   %Bio FIDEID 2017130
+   = Hughes, Stephen
++Hughes, Steven #-   AUS [1490]
+ Hughes, Tyler B #FM USA [2252] 1990 i
+   %Bio FIDEID 2026775
+ Hughes Herrera, David #-  ESP [1655] 1999 i
+@@ -396016,6 +396036,7 @@
+ Jordan, William #FM AUS [2091] 1957 
+   %Bio FIDEID 3200876
+   = Jordan, William J
++  = Jordan, Bill
+ Jordan, Wolfgang #-  GER [2147] 1955 i
+   %Bio FIDEID 4650956
+ Jordan-Mazzoleni, Artemidorio #-  FRA [1435] 2001 i
+@@ -475012,6 +475033,7 @@
+   %Bio FIDEID 3203301
+   = Lane, Gary William
+   = Lane, G W
++  = Lane, Gary
+ Lane, Hakan #-  DEN [2045] 1975 
+   %Bio FIDEID 1433695
+ Lane, Jasmine #-  AUS [1423] 2006 w
+@@ -597999,6 +598021,7 @@
+   %Bio FIDEID 2610981
+ Murray, Bruce D #CM AUS [1894] 1959 
+   %Bio FIDEID 3205177
++  = Murray, Bruce
+ Murray, Burn #-  USA [2078] 1930 i
+   %Bio FIDEID 2017296
+ Murray, David #-  IRL [2081] 1984 
+@@ -879252,6 +879275,8 @@
+   %Bio FIDEID 3267636
+ Thomas, Ben #-  WLS [1939] 2000 
+   %Bio FIDEID 1801252
++Thomas, Brian #-   AUS [1764] 1979
++  %Bio FIDEID 3212351
+ Thomas, Benjamin #-  NZL [1933] 1946 i
+   %Bio FIDEID 4304144
+ Thomas, Brian #-  AUS [1844] 1979 
+@@ -984004,6 +984029,9 @@
+ #   AUT  Austria
+ #   AZE  Azerbaijan
+ 
++%Prefix " " ""
++%Suffix " " ""
++
+ Curacao AHO
+ Willemstad AHO
+ 
+@@ -985482,28 +985510,14 @@
+ %Prefix "08. " "8. "
+ %Prefix "09. " "9. "
+ 
+-%Prefix "II "   "2. "
+-%Prefix "III "  "3. "
+-%Prefix "IV "   "4. "
+-%Prefix "V "    "5. "
+-%Prefix "VI "   "6. "
+-%Prefix "VII "  "7. "
+-%Prefix "VIII " "8. "
+-%Prefix "IX "   "9. "
+-
+-%Infix "1st " "1. "
+-%Infix "2nd " "2. "
+-%Infix "3rd " "3. "
+-%Infix "4th " "4. "
+-%Infix "5th " "5. "
+-%Infix "6th " "6. "
+-%Infix "7th " "7. "
+-%Infix "8th " "8. "
+-%Infix "9th " "9. "
+-%Infix "0th " "0. "
+-%Infix "11th " "11. "
+-%Infix "12th " "12. "
+-%Infix "13th " "13. "
++%Prefix "II "   "2nd "
++%Prefix "III "  "3rd "
++%Prefix "IV "   "4th "
++%Prefix "V "    "5th "
++%Prefix "VI "   "6th "
++%Prefix "VII "  "7th "
++%Prefix "VIII " "8th "
++%Prefix "IX "   "9th "
+ 
+ # Standardize playoff/women/team/etc suffixes:
+ 
+@@ -985540,6 +985554,9 @@
+ %Suffix " jr"   " junior"
+ %Suffix " Jr"   " junior"
+ 
++%Prefix " " ""
++%Suffix " " ""
++
+ Corr
+    = corr
+    = cr
+@@ -985742,6 +985759,10 @@
+ @ROUND ""
+ 
+ ### START OF ROUND SECTION
++
++%Prefix " " ""
++%Suffix " " ""
++
+ 1
+    = 01
+    = (01)

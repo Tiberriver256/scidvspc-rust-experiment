@@ -1,0 +1,24 @@
+{
+  "name": "simple_tags_only",
+  "description": "Test basic PGN tag output without moves",
+  "input": {
+    "event": "Test Tournament",
+    "site": "Internet",
+    "date": "2024.02.04",
+    "round": "1",
+    "white": "Player, White",
+    "black": "Player, Black",
+    "result": "1-0",
+    "white_elo": 2200,
+    "black_elo": 2150,
+    "eco": "B12"
+  },
+  "expected_pgn": "[Event \"Test Tournament\"]\n[Site \"Internet\"]\n[Date \"2024.02.04\"]\n[Round \"1\"]\n[White \"Player, White\"]\n[Black \"Player, Black\"]\n[Result \"1-0\"]\n[WhiteElo \"2200\"]\n[BlackElo \"2150\"]\n[ECO \"B12\"]\n\n1-0\n",
+  "options": {
+    "format": "plain",
+    "include_comments": true,
+    "include_variations": true,
+    "include_nags": true,
+    "short_header": false
+  }
+}

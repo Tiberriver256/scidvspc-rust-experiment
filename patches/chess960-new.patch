@@ -1,0 +1,2449 @@
+Index: Makefile.conf
+===================================================================
+--- Makefile.conf	(revision 3586)
++++ Makefile.conf	(working copy)
+@@ -292,7 +292,7 @@
+ 	install -m 755 -d $(SHAREDIR)
+ 	install -m 755 -d $(BINDIR)
+ 	install -m 755 -d $(SHAREDIR)/data/
+-	install -m 755 scid $(SCRIPTS) $(EXECS) $(BINDIR)
++	install -m 755 scid-vs-960 $(SCRIPTS) $(EXECS) $(BINDIR)
+ 	install -m 644 -p scid.eco $(SHAREDIR)/data/
+ 	install -m 644 -p spelling.ssp $(SHAREDIR)
+ 	install -m 755 -d $(SHAREDIR)/books
+@@ -351,7 +351,7 @@
+ 	rm -rf $(SHAREDIR)/bases
+ 	rm -rf $(SHAREDIR)/data/
+ 	rm -f $(SHAREDIR)/spelling.ssp
+-	rm -f $(BINDIR)/scid $(BINDIR)/sc_addmove $(BINDIR)/sc_epgn
++	rm -f $(BINDIR)/scid-vs-960 $(BINDIR)/sc_addmove $(BINDIR)/sc_epgn
+ 	rm -f $(BINDIR)/sc_spell $(BINDIR)/sc_eco $(BINDIR)/sc_import
+ 	rm -f $(BINDIR)/sc_remote $(BINDIR)/sc_tree $(BINDIR)/scidpgn
+ 	rm -f $(BINDIR)/pgnfix $(BINDIR)/spliteco
+@@ -400,9 +400,9 @@
+ 
+ 
+ scid: $(TCLS)
+-	rm -f ./scid
+-	cat $(TCLS) > ./scid
+-	chmod +x scid
++	rm -f ./scid-vs-960
++	cat $(TCLS) > ./scid-vs-960
++	chmod +x scid-vs-960
+ 
+ ### Some of these targets are totally unused, and need sorting out. S.A
+ 
+Index: Makefile.conf.darwin
+===================================================================
+--- Makefile.conf.darwin	(revision 3586)
++++ Makefile.conf.darwin	(working copy)
+@@ -288,7 +288,7 @@
+ 	install -m 755 -d $(SHAREDIR)
+ 	install -m 755 -d $(BINDIR)
+ 	install -m 755 -d $(SHAREDIR)/data/
+-	install -m 755 scid $(SCRIPTS) $(EXECS) $(BINDIR)
++	install -m 755 scid-vs-960 $(SCRIPTS) $(EXECS) $(BINDIR)
+ 	install -m 644 -p scid.eco $(SHAREDIR)/data/
+ 	install -m 644 -p spelling.ssp $(SHAREDIR)
+ 	install -m 755 -d $(SHAREDIR)/books
+@@ -327,7 +327,7 @@
+ 	rm -rf $(SHAREDIR)/bases
+ 	rm -rf $(SHAREDIR)/data/
+ 	rm -f $(SHAREDIR)/spelling.ssp
+-	rm -f $(BINDIR)/scid $(BINDIR)/sc_addmove $(BINDIR)/sc_epgn
++	rm -f $(BINDIR)/scid-vs-960 $(BINDIR)/sc_addmove $(BINDIR)/sc_epgn
+ 	rm -f $(BINDIR)/sc_spell $(BINDIR)/sc_eco $(BINDIR)/sc_import
+ 	rm -f $(BINDIR)/sc_remote $(BINDIR)/sc_tree $(BINDIR)/scidpgn
+ 	rm -f $(BINDIR)/pgnfix $(BINDIR)/spliteco
+@@ -355,9 +355,9 @@
+ 
+ 
+ scid: $(TCLS)
+-	rm -f ./scid
+-	cat $(TCLS) > ./scid
+-	chmod +x scid
++	rm -f ./scid-vs-960
++	cat $(TCLS) > ./scid-vs-960
++	chmod +x scid-vs-960
+ 
+ ### Mac OSX App
+ 
+Index: Makefile.mingw
+===================================================================
+--- Makefile.mingw	(revision 3586)
++++ Makefile.mingw	(working copy)
+@@ -91,7 +91,7 @@
+ CQL_INCLUDE = -Isrc/cql -Isrc -I$(TCL_DIR)/include
+ 
+ ### EXECS: all the evecutable programs compiled from C++ files.
+-EXECS= pgnscid.exe scidt.exe scid.exe tcscid.exe scmerge.exe eco2epd.exe scidlet.exe
++EXECS= pgnscid.exe scidt.exe scid960.exe tcscid.exe scmerge.exe eco2epd.exe scidlet.exe
+ 
+ ### SCIDOBJS: not all the .o files that make up scid, just the standard
+ ###   files that most of the scid programs use.
+@@ -295,8 +295,8 @@
+ 	$(LINK) $(LDFLAGS) -o scidlet.exe src/scidlet.o src/engine.o src/recog.o \
+           src/misc.o src/position.o src/movelist.o src/dstring.o src/myassert.o
+ 
+-scid.exe: src/scid.o $(OBJS) $(CQLOBJS_I) $(CHARSETCONVOBJS) $(SCID_XOBJS) $(SCID_TK_OBJS) scid.res
+-	$(LINK) $(LDFLAGS) -o scid.exe src/scid.o $(OBJS) $(CQLOBJS_I) $(CHARSETCONVOBJS) $(SCID_XOBJS) $(SCID_TK_OBJS) scid.res \
++scid960.exe: src/scid.o $(OBJS) $(CQLOBJS_I) $(CHARSETCONVOBJS) $(SCID_XOBJS) $(SCID_TK_OBJS) scid.res
++	$(LINK) $(LDFLAGS) -o scid960.exe src/scid.o $(OBJS) $(CQLOBJS_I) $(CHARSETCONVOBJS) $(SCID_XOBJS) $(SCID_TK_OBJS) scid.res \
+ 	    -mwindows -lole32 -luuid -L$(TCL_DIR)/lib -ltk$(TCL_VERSION_NODOT) -ltcl$(TCL_VERSION_NODOT)
+ 
+ tcscid.exe: src/tcscid.o $(OBJS) $(CQLOBJS_I) $(SCID_XOBJS) $(CHARSETCONVOBJS)
+Index: Scid vs PC.iss
+===================================================================
+--- Scid vs PC.iss	(revision 3586)
++++ Scid vs PC.iss	(working copy)
+@@ -1,6 +1,6 @@
+ 
+ #define AppVersion '4.26'
+-#define AppName    'Scid vs PC'
++#define AppName    'Scid vs PC 960'
+ #define ActiveTclUrl 'http://www.activestate.com/activetcl/downloads'
+ 
+ 
+@@ -54,12 +54,12 @@
+ Source: "images\*"; DestDir: "{app}\images";  CopyMode: normal; Flags: recursesubdirs
+ 
+ [Icons]
+-Name: "{group}\{# AppName}"; Filename: "{app}\bin\scid.exe"; Comment: "{# AppName}!"; WorkingDir: {app}\bin
++Name: "{group}\{# AppName}"; Filename: "{app}\bin\scid960.exe"; Comment: "{# AppName}!"; WorkingDir: {app}\bin
+ Name: "{group}\Uninstall {# AppName}"; Filename: "{uninstallexe}";
+-Name: "{userdesktop}\{# AppName}"; Filename: "{app}\bin\scid.exe"; Tasks: desktopicon; Comment: "Desktop {# AppName}!"; WorkingDir: {app}\bin
++Name: "{userdesktop}\{# AppName}"; Filename: "{app}\bin\scid960.exe"; Tasks: desktopicon; Comment: "Desktop {# AppName}!"; WorkingDir: {app}\bin
+ 
+ [Run]
+-Filename: "{app}\bin\scid.exe"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
++Filename: "{app}\bin\scid960.exe"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+ 
+ 
+ [Code]
+Index: src/game.cpp
+===================================================================
+--- src/game.cpp	(revision 3586)
++++ src/game.cpp	(working copy)
+@@ -478,7 +478,8 @@
+ void
+ Game::SaveState ()
+ {
+-    if (!SavedPos) { SavedPos = new Position; }
++    if (!SavedPos) { SavedPos = new Position(this); }
++    CurrentPos->SetOwner(this); // just in case?
+     SavedPos->CopyFrom (CurrentPos);
+     SavedMove = CurrentMove;
+     SavedPlyCount = CurrentPlyCount;
+@@ -495,6 +496,7 @@
+     if (SavedMove) {
+         ASSERT (SavedPos != NULL);
+         CurrentPos->CopyFrom (SavedPos);
++        CurrentPos->SetOwner(this);
+         CurrentMove = SavedMove;
+         CurrentPlyCount = SavedPlyCount;
+         VarDepth = SavedVarDepth;
+@@ -563,7 +565,7 @@
+     MoveChunk = NULL;
+     AllocateMoreMoves();
+     StartPos = NULL;
+-    CurrentPos = new Position;
++    CurrentPos = new Position(this);
+     KeepDecodedMoves = true;
+     SavedPos = NULL;
+     SavedMove = NULL;
+@@ -646,6 +648,10 @@
+ 
+     // Set up standard start
+     CurrentPos->StdStart();
++    CurrentPos->SetOwner(this);
++    if ( ! StartPos ) { StartPos = new Position; }
++    StartPos->CopyFrom( CurrentPos );
++
+     KeepDecodedMoves = true;
+ }
+ 
+@@ -720,8 +726,12 @@
+     }
+     VarDepth = 0;
+     if (!StartPos) { StartPos = new Position; }
++
++    pos->SetOwner(this);
++    
+     StartPos->CopyFrom (pos);
+     CurrentPos->CopyFrom (pos);
++    //
+     // Now make the material signature:
+     FinalMatSig = matsig_Make (StartPos->GetMaterial());
+     NonStandardStart = true;
+@@ -737,7 +747,7 @@
+ Game::SetStartFen (const char * fenStr)
+ {
+     // First try to read the position:
+-    Position * pos = new Position;
++    Position * pos = new Position(this);
+     errorT err = pos->ReadFromFEN (fenStr);
+     if (err != OK) { delete pos; return err; }
+ 
+@@ -749,6 +759,7 @@
+     VarDepth = 0;
+     if (StartPos) { delete StartPos; }
+     StartPos = pos;
++    StartPos->SetOwner(this);
+     CurrentPos->CopyFrom (StartPos);
+     // Now make the material signature:
+     FinalMatSig = matsig_Make (StartPos->GetMaterial());
+@@ -925,6 +936,8 @@
+         CurrentPos->CopyFrom (StartPos);
+     } else {
+         CurrentPos->StdStart();
++        CurrentPos->SetOwner(this);
++        StartPos->CopyFrom(CurrentPos);
+     }
+     CurrentPlyCount = 0;
+     for (ushort i=0; i < hmNumber; i++) {
+@@ -1339,6 +1352,7 @@
+     ASSERT (CurrentMove != NULL);
+     while (MoveExitVariation() == OK);  // exit variations
+     if (!StartPos) { StartPos = new Position; }
++    CurrentPos->SetOwner(this); // just in case?
+     StartPos->CopyFrom (CurrentPos);
+     NonStandardStart = true;
+     CurrentMove->prev->marker = END_MARKER;
+@@ -4142,7 +4156,7 @@
+ // encodeKing(): encoding of King moves.
+ //
+ static inline void
+-encodeKing (ByteBuffer * buf, simpleMoveT * sm)
++encodeKing (ByteBuffer * buf, simpleMoveT * sm, Position * pos)
+ {
+     // Valid King difference-from-old-square values are:
+     // -9, -8, -7, -1, 1, 7, 8, 9, and -2 and 2 for castling.
+@@ -4152,6 +4166,31 @@
+ 
+     ASSERT(sm->pieceNum == 0);  // Kings MUST be piece Number zero.
+     int diff = (int) sm->to - (int) sm->from;
++
++    squareT kr = NS;
++    squareT qr = NS;
++    rankT krank = square_Rank(sm->from);
++    
++    pieceT * board = pos->GetBoard();
++
++    pieceT friendlyrook = piece_Make( pos->GetToMove(), ROOK );
++
++    squareT kcur;
++    
++    kcur = sm->from;
++    while ( square_Rank(kcur) == krank ) {
++        if ( board[kcur] == friendlyrook ) { kr = kcur; break; }
++        kcur++;
++    }
++    kcur = sm->from;
++    while ( square_Rank(kcur) == krank ) {
++        if ( board[kcur] == friendlyrook ) { qr = kcur; break; }
++        kcur--;
++    }
++
++    if (sm->to == kr) { diff = 2; }
++    if (sm->to == qr) { diff = -2; }
++    
+     static const byte val[] = {
+     /* -9 -8 -7 -6 -5 -4 -3 -2 -1  0  1   2  3  4  5  6  7  8  9 */
+         1, 2, 3, 0, 0, 0, 0, 9, 4, 0, 5, 10, 0, 0, 0, 0, 6, 7, 8
+@@ -4174,7 +4213,7 @@
+ // decodeKing(): decoding of King moves.
+ //
+ static inline errorT
+-decodeKing (byte val, simpleMoveT * sm)
++decodeKing (byte val, simpleMoveT * sm, Position * pos)
+ {
+     static const int sqdiff[] = {
+         0, -9, -8, -7, -1, 1, 7, 8, 9, -2, 2
+@@ -4186,8 +4225,34 @@
+     }
+ 
+     if (val < 1  ||  val > 10) { return ERROR_Decode; }
+-    sm->to = sm->from + sqdiff[val];
+-    return OK;
++    if (val >= 1 && val <= 8) {
++        sm->to = sm->from + sqdiff[val];
++        return OK;
++    }
++    else {
++        int direction;
++        if (val == 9) { direction = -1; }  //queenside
++        if (val == 10) { direction = 1; }  //kingside
++
++        squareT kdest;
++        kdest = NS;
++        squareT kcur = sm->from;
++        rankT krank = square_Rank(sm->from);
++
++        pieceT friendlyrook = piece_Make( pos->GetToMove(), ROOK );
++        pieceT * board = pos->GetBoard();
++
++        while ( square_Rank(kcur) == krank ) {
++            if ( board[kcur] == friendlyrook ) { kdest = kcur; break; }
++            kcur = kcur + direction;
++        }
++        
++        if (kcur != NS) {
++            sm->to = kdest;
++            return OK;
++        }
++    }
++    return ERROR_Decode;
+ }
+ 
+ //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@@ -4518,7 +4583,7 @@
+         err = decodeBishop (val & 15, sm);
+         break;
+     case KING:
+-        err = decodeKing (val & 15, sm);
++        err = decodeKing (val & 15, sm, pos);
+         break;
+     // For queen moves: Rook-like moves are in 1 byte, diagonals are in 2.
+     case QUEEN:
+@@ -4535,7 +4600,7 @@
+ //  Encode one move and output it to the bytebuffer.
+ //
+ static void
+-encodeMove (ByteBuffer * buf, moveT * m)
++encodeMove (ByteBuffer * buf, moveT * m, Position * pos)
+ {
+     simpleMoveT * sm = &(m->moveData);
+     pieceT pt = piece_Type(sm->movingPiece);
+@@ -4543,7 +4608,7 @@
+     typedef void encodeFnType (ByteBuffer *, simpleMoveT *);
+     static encodeFnType * encodeFn[] = {
+         NULL         /* 0 */,
+-        encodeKing   /*1=KING*/,
++        NULL         /*1=KING*/,
+         encodeQueen  /*2=QUEEN*/,
+         encodeRook   /*3=ROOK*/,
+         encodeBishop /*4=BISHOP*/,
+@@ -4551,7 +4616,10 @@
+         encodePawn   /*6=PAWN*/
+     };
+     ASSERT (pt >= KING  &&  pt <= PAWN);
+-    (encodeFn[pt]) (buf, sm);
++    if (pt > KING ) { (encodeFn[pt]) (buf, sm); }
++    else {
++        encodeKing(buf, sm, pos);
++    }
+ }
+ 
+ //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@@ -4560,7 +4628,7 @@
+ //
+ static errorT
+ encodeVariation (ByteBuffer * buf, moveT * m, uint * subVarCount,
+-                 uint * nagCount, uint depth)
++                 uint * nagCount, uint depth, Position * encpos)
+ {
+     ASSERT (m != NULL);
+ 
+@@ -4569,8 +4637,8 @@
+         buf->PutByte (ENCODE_COMMENT);
+     }
+ 
+-    while (m->marker != END_MARKER) {
+-        encodeMove (buf, m);
++    while (m->marker != END_MARKER) {            
++        encodeMove (buf, m, encpos);         
+         for (uint i=0; i < (uint) m->nagCount; i++) {
+             buf->PutByte (ENCODE_NAG);
+             buf->PutByte (m->nags[i]);
+@@ -4584,10 +4652,14 @@
+             for (uint i=0; i < m->numVariations; i++) {
+                 *subVarCount += 1;
+                 buf->PutByte (ENCODE_START_MARKER);
+-                encodeVariation (buf, subVar->next, subVarCount, nagCount, depth+1);
++                Position * varencpos = new Position();
++                varencpos->CopyFrom(encpos);
++                encodeVariation (buf, subVar->next, subVarCount, nagCount, depth+1, varencpos);
++                delete varencpos;
+                 subVar = subVar->varChild;
+             }
+         }
++        encpos->DoSimpleMove (&(m->moveData));
+         m = m->next;
+     }
+     // At end, we output the end-variation or end-game token.
+@@ -4890,7 +4962,10 @@
+     // Now the movelist:
+     uint varCount = 0;
+     uint nagCount = 0;
+-    err = encodeVariation (buf, FirstMove->next, &varCount, &nagCount, 0);
++    Position * encpos = new Position();
++    encpos->CopyFrom(StartPos);
++    err = encodeVariation (buf, FirstMove->next, &varCount, &nagCount, 0, encpos);
++    delete encpos;
+     if (err != OK) { return err; }
+ 
+     // Now do the comments
+@@ -5078,6 +5153,7 @@
+             NonStandardStart = 0;
+             return err;
+         }
++        StartPos->SetOwner(this);
+         CurrentPos->CopyFrom (StartPos);
+     }
+ 
+@@ -5127,6 +5203,7 @@
+             NonStandardStart = 0;
+             return err;
+         }
++        StartPos->SetOwner(this);
+         *CurrentPos = *StartPos;
+     }
+ 
+Index: src/gfile.h
+===================================================================
+--- src/gfile.h	(revision 3586)
++++ src/gfile.h	(working copy)
+@@ -23,8 +23,7 @@
+ #include "mfile.h"
+ 
+ #define GF_BLOCKSIZE  131072 //524288
+-// const char OLD_GFILE_SUFFIX [] = ".sg3";
+-const char GFILE_SUFFIX [] = ".sg4";
++const char GFILE_SUFFIX [] = ".sg960";
+ 
+ 
+ // The block structure type:
+Index: src/index.h
+===================================================================
+--- src/index.h	(revision 3586)
++++ src/index.h	(working copy)
+@@ -30,8 +30,8 @@
+ //////////////////////////////////////////////////////////////////////
+ //  Index:  Constants
+ 
+-const char         INDEX_SUFFIX[]     = ".si4";
+-const char         OLD_INDEX_SUFFIX[] = ".si3";
++const char         INDEX_SUFFIX[]     = ".si960";
++const char         OLD_INDEX_SUFFIX[] = ".si4";
+ const char         INDEX_MAGIC[8]     = "Scid.si";
+ const gameNumberT  MAX_GAMES          = 16777214;
+ // max. number of games is 2^(3*8)-1-1,
+Index: src/movelist.h
+===================================================================
+--- src/movelist.h	(revision 3586)
++++ src/movelist.h	(working copy)
+@@ -46,6 +46,11 @@
+     squareT  epSquare;       // pre-move information
+     ushort   oldHalfMoveClock;
+     int      score;          // used for alpha/beta ordering.
++
++    squareT  kingFrom;
++    squareT  kingTo;
++    squareT  rookFrom;
++    squareT  rookTo;
+ };
+ 
+ inline bool isNullMove (simpleMoveT * sm)
+Index: src/namebase.h
+===================================================================
+--- src/namebase.h	(revision 3586)
++++ src/namebase.h	(working copy)
+@@ -55,8 +55,7 @@
+ const caseFlagT
+     CASE_SENSITIVE = 0,  CASE_INSENSITIVE = 1;
+ 
+-// const char OLD_NAMEBASE_SUFFIX[] = ".sn3";
+-const char NAMEBASE_SUFFIX[] = ".sn4";
++const char NAMEBASE_SUFFIX[] = ".sn960";
+ 
+ const char NAMEBASE_MAGIC[8] = "Scid.sn";
+ 
+Index: src/position.cpp
+===================================================================
+--- src/position.cpp	(revision 3586)
++++ src/position.cpp	(working copy)
+@@ -14,6 +14,7 @@
+ 
+ #include "common.h"
+ #include "position.h"
++#include "game.h"
+ #include "attacks.h"
+ #include "misc.h"
+ #include "sqlist.h"
+@@ -295,6 +296,34 @@
+ }
+ 
+ //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++// Position::SetRookOrigSq():
++//    Set the original square of a rook
++//    Uses newly programmed pointer to the owner game so we
++//    can use it to find the rook in it's StartPos
++//    If no game * then sets itself
++//
++void
++Position::SetRookOrigSq( colorT color, castleDirT side, squareT sq ) {
++    RookOrigSq[color][side] = sq;
++}
++
++//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++// Position::GetRookOrigSq():
++//    Get the original square of a rook
++//    Uses newly programmed pointer to the owner game so we
++//    can use it to find the rook in it's StartPos
++//
++squareT
++Position::GetRookOrigSq( colorT color, castleDirT side ) {
++    Game * thisgame = GetOwner();
++    if ( thisgame != NULL ) {
++        Position * startpos = thisgame->GetStartPos();
++        if ( startpos != NULL ) { return startpos->RookOrigSq[color][side]; }
++    }
++    return RookOrigSq[color][side];
++}
++
++//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ // Position::GenCastling():
+ //    Generate the legal castling moves.
+ //    Assumes the side to move is NOT in check, so the caller
+@@ -305,44 +334,68 @@
+ {
+     ASSERT (! IsKingInCheck());
+     squareT from = GetKingSquare(ToMove);
+-    if (from != (ToMove == WHITE ? E1 : E8))  { return; }
+     squareT enemyKingSq = GetEnemyKingSquare();
+-    squareT target, skip, rookSq;
+-    pieceT rookPiece;
++    
++    squareT krookOrig = GetRookOrigSq ( ToMove, KSIDE );
++    squareT qrookOrig = GetRookOrigSq ( ToMove, QSIDE );
+ 
+-    // Try kingside first
++    for ( int dir = -1; dir < 2; dir++ ) {
++        if ( dir == 0 ) { continue; }
++        bool ok = false;
++        if ( dir == -1 and (!StrictCastling  ||  GetCastling (ToMove, QSIDE)) ) { ok = true; }
++        if ( dir == 1 and (!StrictCastling  ||  GetCastling (ToMove, KSIDE)) ) { ok = true; }
++        if ( ! ok ) { continue; }
+ 
+-    // Kingside Castling:
+-    if (!StrictCastling  ||  GetCastling (ToMove, KSIDE)) {
+-        if (ToMove == WHITE) {
+-            target = G1; skip = F1; rookSq = H1; rookPiece = WR;
+-        } else {
+-            target = G8; skip = F8; rookSq = H8; rookPiece = BR;
+-        }
+-        if (Board[target] == EMPTY  &&  Board[skip] == EMPTY
+-                &&  Board[rookSq] == rookPiece
+-                &&  CalcNumChecks (target) == 0
+-                &&  CalcNumChecks (skip) == 0
+-                &&  ! square_Adjacent (target, enemyKingSq)) {
+-            AddLegalMove (mlist, from, target, EMPTY);
+-        }
+-    }
++        for ( squareT rookSq = from; square_Rank(rookSq) == square_Rank(from); rookSq=rookSq+dir ) {
++            if ( Board[rookSq] == piece_Make(ToMove, ROOK) ) { 
++                if ( dir == -1 && rookSq != qrookOrig ) { break; } // correct side, wrong rook
++                if ( dir == 1 && rookSq != krookOrig ) { break; } // correct side, wrong rook
++                squareT furthest_left, furthest_right, king_left, king_right;
++                squareT kdest, rdest;
++                squareT kingSq = from;
+ 
+-    // Queenside Castling:
+-    if (!StrictCastling  ||  GetCastling (ToMove, QSIDE)) {
+-        if (ToMove == WHITE) {
+-            target = C1; skip = D1; rookSq = A1; rookPiece = WR;
+-        } else {
+-            target = C8; skip = D8; rookSq = A8; rookPiece = BR;
++                if ( dir > 0 ) {
++                    kdest = (ToMove == WHITE ? G1 : G8);
++                    rdest = (ToMove == WHITE ? F1 : F8);
++                }
++                if (dir < 0) {
++                    kdest = (ToMove == WHITE ? C1 : C8);
++                    rdest = (ToMove == WHITE ? D1 : D8);
++                }
++                furthest_left = kdest;
++                if (kingSq < furthest_left) { furthest_left = kingSq; }
++                if (rookSq < furthest_left) { furthest_left = rookSq; }
++                if (rdest < furthest_left) { furthest_left = rdest; }
++
++                king_left = kdest;
++                if (kingSq < king_left) { king_left = kingSq; }
++
++                furthest_right = kdest;
++                if (kingSq > furthest_right) { furthest_right = kingSq; }
++                if (rookSq > furthest_right) { furthest_right = rookSq; }
++                if (rdest > furthest_right) { furthest_right = rdest; }
++
++                king_right = kdest;
++                if (kingSq > king_right) { king_right = kingSq; }
++                
++                bool ok2 = true;
++                for (squareT sq = king_left; sq <= king_right; sq++) {
++                    if (CalcNumChecks(sq) > 0) { ok2 = false; break; }
++                    if (square_Adjacent (sq, enemyKingSq)) { ok2 = false; break; }
++                }
++
++                if ( ! ok2 ) { break; }
++
++                uint piececount = 0;
++                for (squareT sq = furthest_left; sq <= furthest_right; sq++) {
++                    if (Board[sq] != EMPTY) { piececount++ ; }
++                }
++                if (piececount > 2) { break; }
++
++                AddLegalMove (mlist, from, rookSq, EMPTY);
++                break;
++            }
+         }
+-        if (Board[target] == EMPTY  &&  Board[skip] == EMPTY
+-                &&  Board[rookSq] == rookPiece
+-                &&  Board[target - 1] == EMPTY // B1 or B8 must be empty too!
+-                &&  CalcNumChecks (target) == 0
+-                &&  CalcNumChecks (skip) == 0
+-                &&  ! square_Adjacent (target, enemyKingSq)) {
+-            AddLegalMove (mlist, from, target, EMPTY);
+-        }
+     }
+ }
+ 
+@@ -563,14 +616,15 @@
+ //      Initialise the position after it is constructed.
+ //
+ void
+-Position::Init (void)
++Position::Init (Game * owner)
+ {
+     // Setting up a valid board is left to StdStart() or Clear().
++    Owner = owner;
+     Board [COLOR_SQUARE] = EMPTY;
+     Board [NULL_SQUARE] = END_OF_BOARD;
+ 	LegalMoves.Clear();
+     StrictCastling = true;
+-
++    
+     // Make sure all tables used for move generation, hashing,
+     // square tests, etc have been computed:
+     initHashValues();
+@@ -599,6 +653,12 @@
+     Count[WHITE] = Count[BLACK] = 0;
+     EPTarget = NULL_SQUARE;
+     Castling = 0;
++
++    //SetRookOrigSq (WHITE, QSIDE, NS);
++    //SetRookOrigSq (WHITE, KSIDE, NS);
++    //SetRookOrigSq (BLACK, QSIDE, NS);
++    //SetRookOrigSq (BLACK, KSIDE, NS);
++
+     Board [NULL_SQUARE] = END_OF_BOARD;
+     PlyCounter = 0;
+     HalfMoveClock = 0;
+@@ -654,6 +714,12 @@
+         Castling = 0;
+         SetCastling (WHITE, QSIDE, true);  SetCastling (WHITE, KSIDE, true);
+         SetCastling (BLACK, QSIDE, true);  SetCastling (BLACK, KSIDE, true);
++
++        SetRookOrigSq (WHITE, QSIDE, A1);
++        SetRookOrigSq (WHITE, KSIDE, H1);
++        SetRookOrigSq (BLACK, QSIDE, A8);
++        SetRookOrigSq (BLACK, KSIDE, H8);
++
+         EPTarget = NULL_SQUARE;
+         ToMove = WHITE;
+         PlyCounter = 0;
+@@ -1252,51 +1318,83 @@
+     squareT kingSq = GetKingSquare(ToMove);
+     sint diff = (int)target - (int) kingSq;
+ 
+-    // Valid diffs are: -9, -8, -7, -2, -1, 1, 2, 7, 8, 9. (-2,2: Castling)
+-
+-    if (diff < -9  ||  diff > 9) { return ERROR_InvalidMove; }
+-    if (diff > -7  &&  diff < -2) { return ERROR_InvalidMove; }
+-    if (diff > 2  &&  diff < 7) { return ERROR_InvalidMove; }
+     if (diff == 0) { return ERROR_InvalidMove; }
+ 
+-    if (diff == 2) { // KingSide Castling
+-        if (kingSq != (ToMove == WHITE ? E1 : E8)) {
+-            return ERROR_InvalidMove;
++    squareT rookSq;
++    rankT kingRnk = square_Rank(kingSq);
++    rankT targetRnk = square_Rank(target);
++
++    bool castle_attempt = false;
++    if ( Board[target] == piece_Make(ToMove, ROOK) ) { 
++        castle_attempt = true; 
++    }
++    if (! castle_attempt) {
++        if (targetRnk != kingRnk) {
++            if (diff < -9  ||  diff > 9) { return ERROR_InvalidMove; }
++            if (diff > -6  &&  diff < 6) { return ERROR_InvalidMove; }
+         }
+-        if (StrictCastling  &&  ! GetCastling (ToMove, KSIDE)) {
+-            return ERROR_InvalidMove;
++        else if ( diff > 1 || diff < -1 ) { return ERROR_InvalidMove; }
++    }
++
++    //check for all squares king has to move not touched by king or in check
++    //check all furthest  only occupied by 2 pieces
++
++    squareT enemyKingSq = GetEnemyKingSquare();
++
++    if (castle_attempt) {
++        rookSq = target;
++
++        squareT furthest_left, furthest_right, king_left, king_right;
++        squareT kdest, rdest;
++
++        if ( diff > 0 ) { // KingSide Castling
++            if ( rookSq != GetRookOrigSq ( ToMove, KSIDE ) ) { return ERROR_InvalidMove; }
++            kdest = (ToMove == WHITE ? G1 : G8);
++            rdest = (ToMove == WHITE ? F1 : F8);
+         }
++        if (diff < 0) { // Queenside Castling
++            if ( rookSq != GetRookOrigSq ( ToMove, QSIDE ) ) { return ERROR_InvalidMove; }
++            kdest = (ToMove == WHITE ? C1 : C8);
++            rdest = (ToMove == WHITE ? D1 : D8);
++        }
+ 
+-        // XXX We also need to verify that the target square does not
+-        //     lie adjacent to the location of the enemy king!
++        furthest_left = kdest;
++        if (kingSq < furthest_left) { furthest_left = kingSq; }
++        if (rookSq < furthest_left) { furthest_left = rookSq; }
++        if (rdest < furthest_left) { furthest_left = rdest; }
+ 
+-        if (Board[kingSq + 1] != EMPTY  ||  Board[kingSq + 2] != EMPTY
+-            ||  CalcNumChecks(kingSq) > 0
+-            ||  CalcNumChecks(kingSq + 1) > 0
+-            ||  CalcNumChecks(kingSq + 2) > 0) {
+-            return ERROR_InvalidMove;
++        king_left = kdest;
++        if (kingSq < king_left) { king_left = kingSq; }
++
++        furthest_right = kdest;
++        if (kingSq > furthest_right) { furthest_right = kingSq; }
++        if (rookSq > furthest_right) { furthest_right = rookSq; }
++        if (rdest > furthest_right) { furthest_right = rdest; }
++
++        king_right = kdest;
++        if (kingSq > king_right) { king_right = kingSq; }
++
++        for (squareT sq = king_left; sq <= king_right; sq++) {
++            if (CalcNumChecks(sq) > 0) { return ERROR_InvalidMove; }
+         }
+-        AddLegalMove (mlist, kingSq, target, EMPTY);
+-        return OK;
+-    }
+ 
+-    if (diff == -2) { // Queenside Castling
+-        if (kingSq != (ToMove == WHITE ? E1 : E8)) {
+-            return ERROR_InvalidMove;
++        uint piececount = 0;
++        for (squareT sq = furthest_left; sq <= furthest_right; sq++) {
++            if (Board[sq] != EMPTY) { piececount++ ; }
+         }
+-        if (StrictCastling  &&  ! GetCastling (ToMove, QSIDE)) {
+-            return ERROR_InvalidMove;
++        if (piececount > 2) { return ERROR_InvalidMove; }
++
++        bool ok2 = true;
++        for (squareT sq = king_left; sq <= king_right; sq++) {
++            if (CalcNumChecks(sq) > 0) { ok2 = false; break; }
++            if (square_Adjacent (sq, enemyKingSq)) { ok2 = false; break; }
+         }
+-        if (Board[kingSq - 1] != EMPTY  ||  Board[kingSq - 2] != EMPTY
+-            ||  Board[kingSq - 3] != EMPTY
+-            ||  CalcNumChecks(kingSq) > 0
+-            ||  CalcNumChecks(kingSq - 1) > 0
+-            ||  CalcNumChecks(kingSq - 2) > 0) {
+-            return ERROR_InvalidMove;
+-        }
++        if (!ok2) { return ERROR_InvalidMove; }
++
+         AddLegalMove (mlist, kingSq, target, EMPTY);
+         return OK;
+     }
++
+     pieceT captured = Board[target];
+     if (piece_Color(captured) == ToMove) {
+         // Capturing a friendly piece!
+@@ -1307,6 +1405,8 @@
+     // leaves the King in check:
+     // XXX We should also check for adjacency to enemy King!!
+ 
++    // why not get rid of :
++    /*
+     Board[target] = piece_Make(ToMove, KING);
+     Board[kingSq] = EMPTY;
+     if (captured != EMPTY) { Material[captured]--; }
+@@ -1319,10 +1419,18 @@
+         AddLegalMove (mlist, kingSq, target, EMPTY);
+         return OK;
+     }
++    */
++    // and just do:
++    if ( CalcNumChecks(target) == 0 && ! square_Adjacent (target, enemyKingSq) ) {
++        AddLegalMove (mlist, kingSq, target, EMPTY);
++        return OK;
++    }
++
++
++
+     return ERROR_InvalidMove;
+ }
+ 
+-
+ //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ // Position::GenCheckEvasions():
+ //      Generate legal moves for the side to move when the
+@@ -1820,6 +1928,25 @@
+     sm->epSquare = EPTarget;
+     sm->oldHalfMoveClock = HalfMoveClock;
+ 
++    sm->kingTo = NS;
++    sm->kingFrom = NS;
++    sm->rookFrom = NS;
++    sm->rookTo = NS;
++
++    if ( ptype == KING && Board[to] == piece_Make( ToMove, ROOK) ) { 
++        sm->capturedPiece = EMPTY; 
++        sm->kingFrom = from;
++        sm->rookFrom = to;
++        if (from < to) {  //kingside
++            sm->kingTo = ( ToMove == WHITE ? G1 : G8 );
++            sm->rookTo = ( ToMove == WHITE ? F1 : F8 );
++        }
++        else {  //queenside
++            sm->kingTo = ( ToMove == WHITE ? C1 : C8 );
++            sm->rookTo = ( ToMove == WHITE ? D1 : D8 );
++        }
++    }
++
+     HalfMoveClock++;
+     PlyCounter++;
+ 	LegalMoves.Clear();
+@@ -1871,28 +1998,30 @@
+     }
+ 
+     // now make the move:
+-    List[ToMove][sm->pieceNum] = to;
+-    ListPos[to] = sm->pieceNum;
+-    RemoveFromBoard (p, from);
+-    AddToBoard (p, to);
++    if ( sm->kingFrom == NS ) { // not castling
++        List[ToMove][sm->pieceNum] = to;
++        ListPos[to] = sm->pieceNum;
++        RemoveFromBoard (p, from);
++        AddToBoard (p, to);
++    }
+ 
+     // handle Castling:
+ 
+-    if (ptype == KING  &&  square_Fyle(from) == E_FYLE  &&
+-            (square_Fyle(to) == C_FYLE  ||  square_Fyle(to) == G_FYLE)) {
+-        squareT rookfrom, rookto;
++    if ( sm->kingFrom != NS ) { // castling
+         pieceT rook = piece_Make (ToMove, ROOK);
+-        if (square_Fyle(to) == C_FYLE) {
+-            rookfrom = to - 2;
+-            rookto = to + 1;
+-        } else {
+-            rookfrom = to + 1;
+-            rookto = to - 1;
+-        }
+-        ListPos[rookto] = ListPos[rookfrom];
+-        List[ToMove][ListPos[rookto]] = rookto;
+-        RemoveFromBoard (rook, rookfrom);
+-        AddToBoard (rook, rookto);
++
++        byte king_pieceNum = sm->pieceNum;
++        byte rook_pieceNum = ListPos[sm->rookFrom];
++
++        List[ToMove][king_pieceNum] = sm->kingTo;
++        List[ToMove][rook_pieceNum] = sm->rookTo;
++        ListPos[sm->kingTo] = king_pieceNum;
++        ListPos[sm->rookTo] = rook_pieceNum;
++
++        RemoveFromBoard (p, sm->kingFrom);
++        RemoveFromBoard (rook, sm->rookFrom);
++        AddToBoard (p, sm->kingTo);
++        AddToBoard (rook, sm->rookTo);
+     }
+ 
+     // Handle clearing of castling flags:
+@@ -1903,6 +2032,7 @@
+             SetCastling (ToMove, KSIDE, false);
+         }
+         // See if a rook moved or was captured:
++/*
+         if (ToMove == WHITE) {
+             if (from == A1)  { SetCastling (WHITE, QSIDE, false); }
+             if (from == H1)  { SetCastling (WHITE, KSIDE, false); }
+@@ -1914,6 +2044,24 @@
+             if (to == A1)    { SetCastling (WHITE, QSIDE, false); }
+             if (to == H1)    { SetCastling (WHITE, KSIDE, false); }
+         }
++*/
++
++        squareT WKR_sq = GetRookOrigSq ( WHITE, KSIDE );
++        squareT WQR_sq = GetRookOrigSq ( WHITE, QSIDE );
++        squareT BKR_sq = GetRookOrigSq ( BLACK, KSIDE );
++        squareT BQR_sq = GetRookOrigSq ( BLACK, QSIDE );
++
++        if (ToMove == WHITE) {
++            if (from == WQR_sq)  { SetCastling (WHITE, QSIDE, false); }
++            if (from == WKR_sq)  { SetCastling (WHITE, KSIDE, false); }
++            if (to == BQR_sq)    { SetCastling (BLACK, QSIDE, false); }
++            if (to == BKR_sq)    { SetCastling (BLACK, KSIDE, false); }
++        } else {
++            if (from == BQR_sq)  { SetCastling (BLACK, QSIDE, false); }
++            if (from == BKR_sq)  { SetCastling (BLACK, KSIDE, false); }
++            if (to == WQR_sq)    { SetCastling (WHITE, QSIDE, false); }
++            if (to == WKR_sq)    { SetCastling (WHITE, KSIDE, false); }
++        }
+     }
+ 
+     // Set the EPTarget square, if a pawn advanced two squares and an
+@@ -2000,29 +2148,37 @@
+ 
+     // now make the move:
+ 
+-    List[ToMove][m->pieceNum] = from;
+-    ListPos[from] = m->pieceNum;
+-    RemoveFromBoard (p, to);
+-    AddToBoard (p, from);
+-    if (m->capturedPiece != EMPTY) {
+-        AddToBoard (m->capturedPiece, m->capturedSquare);
++    if ( m->kingFrom > H8 ) { // not castling
++        List[ToMove][m->pieceNum] = from;
++        ListPos[from] = m->pieceNum;
++        RemoveFromBoard (p, to);
++        AddToBoard (p, from);
++        if (m->capturedPiece != EMPTY) {
++            AddToBoard (m->capturedPiece, m->capturedSquare);
++        }
+     }
+ 
+     // handle Castling:
+ 
+-    if ((piece_Type(p) == KING) && square_Fyle(from) == E_FYLE
+-            && (square_Fyle(to) == C_FYLE || square_Fyle(to) == G_FYLE)) {
+-        squareT rookfrom, rookto;
++    if ( m->kingFrom <= H8 ) { // castling
++        m->pieceNum = ListPos[m->kingTo];
++        p = Board[m->kingTo];
+         pieceT rook = (ToMove == WHITE? WR : BR);
+-        if (square_Fyle(to) == C_FYLE) {
+-            rookfrom = to - 2;   rookto = to + 1;
+-        } else {
+-            rookfrom = to + 1;   rookto = to - 1;
+-        }
+-        ListPos[rookfrom] = ListPos[rookto];
+-        List[ToMove][ListPos[rookto]] = rookfrom;
+-        RemoveFromBoard (rook, rookto);
+-        AddToBoard (rook, rookfrom);
++
++        byte king_pieceNum = m->pieceNum;
++        byte rook_pieceNum = ListPos[m->rookTo];
++
++        List[ToMove][king_pieceNum] = m->kingFrom;
++        List[ToMove][rook_pieceNum] = m->rookFrom;
++        ListPos[m->kingFrom] = king_pieceNum;
++        ListPos[m->rookFrom] = rook_pieceNum;
++
++        RemoveFromBoard (p, m->kingTo);
++        RemoveFromBoard (rook, m->rookTo);
++        AddToBoard (p, m->kingFrom);
++        AddToBoard (rook, m->rookFrom);
++
++        m->to = m->rookFrom;
+     }
+ 
+ #ifdef ASSERTIONS
+@@ -2136,6 +2292,7 @@
+ 
+     // Make sure m->pieceNum is updated:
+     m->pieceNum = ListPos[m->from];
++
+     pieceT  p    = piece_Type (Board[List[ToMove][m->pieceNum]]);
+     squareT from = List[ToMove][m->pieceNum];
+     squareT to   = m->to;
+@@ -2158,11 +2315,13 @@
+             //*c++ = 'n'; *c++ = 'u'; *c++ = 'l'; *c++ = 'l';
+             *c++ = '-'; *c++ = '-';
+         } else
+-        if ((square_Fyle(from)==E_FYLE) && (square_Fyle(to)==G_FYLE)) {
+-            *c++ = 'O'; *c++ = '-'; *c++ = 'O';
+-        } else
+-        if ((square_Fyle(from)==E_FYLE) && (square_Fyle(to)==C_FYLE)) {
+-            *c++ = 'O'; *c++ = '-'; *c++ = 'O'; *c++ = '-'; *c++ = 'O';
++        if ( Board[to] == piece_Make(ToMove,ROOK) ) {
++            if (from < to) {
++                *c++ = 'O'; *c++ = '-'; *c++ = 'O';
++            }
++            else {
++                *c++ = 'O'; *c++ = '-'; *c++ = 'O'; *c++ = '-'; *c++ = 'O';
++            }
+         } else {  // regular King move
+             *c++ = 'K';
+             if (Board[to] != EMPTY)  *c++ = 'x';
+@@ -2441,9 +2600,22 @@
+     // Here we handle piece moves, including castling
+     if (token != TOKEN_Move_Piece) {  // Must be castling move
+         ASSERT (token == TOKEN_Move_Castle_King  ||  token == TOKEN_Move_Castle_Queen);
+-        from = (ToMove == WHITE ? E1 : E8);
+-        if (GetKingSquare(ToMove) != from) { return ERROR_InvalidMove; }
+-        to = (token == TOKEN_Move_Castle_King ? (from + 2) : (from - 2));
++
++        rankT kingrank;
++        from = GetKingSquare(ToMove);
++        kingrank = square_Rank(from);
++
++        int direction = ( token == TOKEN_Move_Castle_King ? 1 : -1 );
++
++        for (squareT sq = from + direction; square_Rank(sq) == kingrank; sq = sq + direction) {
++            if ( Board[sq] == piece_Make(ToMove, ROOK) ) {
++                to = sq;
++                break;
++            }
++        }
++
++        if (to == NS) { return ERROR_InvalidMove; }
++
+         if (MatchKingMove (&mlist, to) != OK) {
+             return ERROR_InvalidMove;
+         } else {
+@@ -2925,32 +3097,139 @@
+     if (*s == '-') {
+         s++;  // do nothing
+     } else if (*s == 0) {
+-        // The FEN has no castling field, so just guess that
+-        // castling is possible whenever a king and rook are
+-        // still on their starting squares:
+-        if (Board[E1] == WK) {
+-            if (Board[A1] == WR) { SetCastling (WHITE, QSIDE, true); }
+-            if (Board[H1] == WR) { SetCastling (WHITE, KSIDE, true); }
++        // The FEN has no castling field,
++        // give em outer rooks
++        squareT wksq = GetKingSquare (WHITE);
++        squareT bksq = GetKingSquare (BLACK);
++
++        squareT wrsq = NS;
++        squareT brsq = NS;
++
++        for (int i=0; i<8; i++) { 
++            wrsq = A1 + i;
++            if (Board[wrsq] == WR && wksq > wrsq) { 
++                SetRookOrigSq (WHITE, QSIDE, wrsq); 
++                SetCastling (WHITE, QSIDE, true);
++                break; 
++            }
+         }
+-        if (Board[E8] == BK) {
+-            if (Board[A8] == BR) { SetCastling (BLACK, QSIDE, true); }
+-            if (Board[H8] == BR) { SetCastling (BLACK, KSIDE, true); }
++        for (int i=0; i<8; i++) { 
++            brsq = A8 + i;
++            if (Board[brsq] == BR && bksq > brsq) { 
++                SetRookOrigSq (BLACK, QSIDE, brsq); 
++                SetCastling (BLACK, QSIDE, true);
++                break; 
++            }
++        
+         }
+-    } else {
++        for (int i=0; i<8; i++) { 
++            wrsq = H1 - i;
++            if (Board[wrsq] == WR && wksq < wrsq) { 
++                SetRookOrigSq (WHITE, KSIDE, wrsq); 
++                SetCastling (WHITE, KSIDE, true);
++                break; 
++            }
++        
++        }
++        for (int i=0; i<8; i++) { 
++            brsq = H8 - i;
++            if (Board[brsq] == BR && bksq < brsq) { 
++                SetRookOrigSq (BLACK, KSIDE, brsq); 
++                SetCastling (BLACK, KSIDE, true);
++                break; 
++            }
++        }
++    } else { // could need to to disambiguate; this handles xfen or shredder
+         while (!isspace(*s)  &&  *s != 0) {
++            squareT rsq = NS;
++            squareT ksq = NS;
+             switch (*s) {
+             case 'Q':
+-                SetCastling (WHITE, QSIDE, true);
++                ksq = GetKingSquare (WHITE);
++                for (int i=0; i<8; i++) { 
++                    rsq = A1 + i;
++                    if (Board[rsq] == WR && ksq > rsq) { 
++                        SetRookOrigSq (WHITE, QSIDE, rsq); 
++                        SetCastling (WHITE, QSIDE, true);
++                        break; 
++                    } 
++                }
+                 break;
+             case 'q':
+-                SetCastling (BLACK, QSIDE, true);
++                ksq = GetKingSquare (BLACK);
++                for (int i=0; i<8; i++) { 
++                    rsq = A8 + i;
++                    if (Board[rsq] == BR && ksq > rsq) { 
++                        SetRookOrigSq (BLACK, QSIDE, rsq); 
++                        SetCastling (BLACK, QSIDE, true);
++                        break; 
++                    } 
++                }
+                 break;
+             case 'K':
+-                SetCastling (WHITE, KSIDE, true);
++                ksq = GetKingSquare (WHITE);
++                for (int i=0; i<8; i++) { 
++                    rsq = H1 - i;
++                    if (Board[rsq] == WR && ksq < rsq) { 
++                        SetRookOrigSq (WHITE, KSIDE, rsq); 
++                        SetCastling (WHITE, KSIDE, true);
++                        break; 
++                    } 
++                }
+                 break;
+             case 'k':
+-                SetCastling (BLACK, KSIDE, true);
++                ksq = GetKingSquare (BLACK);
++                for (int i=0; i<8; i++) { 
++                    rsq = H8 - i;
++                    if (Board[rsq] == BR && ksq < rsq) { 
++                        SetRookOrigSq (BLACK, KSIDE, rsq); 
++                        SetCastling (BLACK, KSIDE, true);
++                        break; 
++                    } 
++                }
+                 break;
++            case 'A':
++            case 'B':
++            case 'C':
++            case 'D':
++            case 'E':
++            case 'F':
++            case 'G':
++            case 'H':
++                ksq = GetKingSquare (WHITE);
++                rsq = square_Make ( fyle_FromChar ( (char)((int)*s + 32) ), RANK_1 );
++                if ( Board[rsq] == WR ) {
++                    if ( rsq > ksq ) { 
++                        SetRookOrigSq (WHITE, KSIDE, rsq); 
++                        SetCastling (WHITE, KSIDE, true);
++                    }
++                    else { 
++                        SetRookOrigSq (WHITE, QSIDE, rsq); 
++                        SetCastling (WHITE, QSIDE, true);
++                    }
++                }
++                break;
++            case 'a':
++            case 'b':
++            case 'c':
++            case 'd':
++            case 'e':
++            case 'f':
++            case 'g':
++            case 'h':
++                ksq = GetKingSquare (BLACK);
++                rsq = square_Make ( fyle_FromChar ( (char) *s ), RANK_8 );
++                if ( Board[rsq] == BR ) {
++                    if ( rsq > ksq ) { 
++                        SetRookOrigSq (BLACK, KSIDE, rsq); 
++                        SetCastling (BLACK, KSIDE, true);
++                    }
++                    else { 
++                        SetRookOrigSq (BLACK, QSIDE, rsq); 
++                        SetCastling (BLACK, QSIDE, true); 
++                    }
++                }
++                break;
+             default:
+                 return ERROR_InvalidFEN;
+             }
+@@ -3041,10 +3320,97 @@
+         if (Castling == 0)  {
+             *str++ = '-';
+         } else {
+-            if (GetCastling (WHITE, KSIDE))  { *str++ = 'K'; }
+-            if (GetCastling (WHITE, QSIDE))  { *str++ = 'Q'; }
+-            if (GetCastling (BLACK, KSIDE))  { *str++ = 'k'; }
+-            if (GetCastling (BLACK, QSIDE))  { *str++ = 'q'; }
++            Game * thisgame = GetOwner();
++            Position * startpos = NULL;
++            if ( thisgame != NULL ) { startpos = thisgame->GetStartPos(); }
++
++            if ( startpos ) {
++                squareT wking_sq = GetKingSquare(WHITE);
++                squareT bking_sq = GetKingSquare(BLACK);
++
++                squareT orig_white_king_rook_sq = GetRookOrigSq(WHITE, KSIDE);
++                squareT orig_white_queen_rook_sq = GetRookOrigSq(WHITE, QSIDE);
++                squareT orig_black_king_rook_sq = GetRookOrigSq(BLACK, KSIDE);
++                squareT orig_black_queen_rook_sq = GetRookOrigSq(BLACK, QSIDE);
++
++                squareT white_king_outer_rook_sq = NS;
++                squareT white_king_inner_rook_sq = NS;
++                squareT white_queen_outer_rook_sq = NS;
++                squareT white_queen_inner_rook_sq = NS;
++                squareT black_king_outer_rook_sq = NS;
++                squareT black_king_inner_rook_sq = NS;
++                squareT black_queen_outer_rook_sq = NS;
++                squareT black_queen_inner_rook_sq = NS;
++
++                for (int i=0; i<8; i++) {
++                    int wsq = A1+i;
++                    int bsq = A8+i;
++                    if ( Board[wsq] == WR) {
++                        if ( wsq < wking_sq ) { //queenside
++                            if ( white_queen_outer_rook_sq == NS ) { 
++                                white_queen_outer_rook_sq = wsq; 
++                                white_queen_inner_rook_sq = wsq;
++                            }
++                            else { white_queen_inner_rook_sq = wsq; }
++                        }
++                        else { //kingside
++                            if ( white_king_inner_rook_sq == NS ) { 
++                                white_king_inner_rook_sq = wsq; 
++                                white_king_outer_rook_sq = wsq;
++                            }
++                            else { white_king_outer_rook_sq = wsq; }
++                        }
++                    }
++                    if ( Board[bsq] == BR ) {
++                        if ( bsq < bking_sq ) { //queenside
++                            if ( black_queen_outer_rook_sq == NS ) { 
++                                black_queen_outer_rook_sq = bsq; 
++                                black_queen_inner_rook_sq = bsq;
++                            }
++                            else { black_queen_inner_rook_sq = bsq; }
++                        }
++                        else { //kingside
++                            if ( black_king_inner_rook_sq == NS ) { 
++                                black_king_inner_rook_sq = bsq; 
++                                black_king_outer_rook_sq = bsq;
++                            }
++                            else { black_king_outer_rook_sq = bsq; }
++                        }
++                    }
++                }
++
++                bool something = false;
++
++                if ( GetCastling (WHITE, KSIDE) ) {
++                    if ( white_king_outer_rook_sq != orig_white_king_rook_sq )  { *str++ = square_Fyle(white_king_inner_rook_sq) + 'A'; }
++                    else { *str++ = 'K'; }
++                    something = true;
++                }
++                if ( GetCastling (WHITE, QSIDE) ) {
++                    if ( white_queen_outer_rook_sq != orig_white_queen_rook_sq )  { *str++ = square_Fyle(white_queen_inner_rook_sq) + 'A'; }
++                    else { *str++ = 'Q'; }
++                    something = true;
++                }
++                if ( GetCastling (BLACK, KSIDE) ) {
++                    if ( black_king_outer_rook_sq != orig_black_king_rook_sq )  { *str++ = square_Fyle(black_king_inner_rook_sq) + 'a'; }
++                    else { *str++ = 'k'; }
++                    something = true;
++                }
++                if ( GetCastling (BLACK, QSIDE) ) {
++                    if ( black_queen_outer_rook_sq != orig_black_queen_rook_sq )  { *str++ = square_Fyle(black_queen_inner_rook_sq) + 'a'; }
++                    else { *str++ = 'q'; }
++                    something = true;
++                }
++
++                if ( ! something ) { *str++ = '-'; }
++            }
++
++            else {
++                if (GetCastling (WHITE, KSIDE))  { *str++ = 'K'; }
++                if (GetCastling (WHITE, QSIDE))  { *str++ = 'Q'; }
++                if (GetCastling (BLACK, KSIDE))  { *str++ = 'k'; }
++                if (GetCastling (BLACK, QSIDE))  { *str++ = 'q'; }
++            }
+         }
+         *str++ = ' ';
+ 
+Index: src/position.h
+===================================================================
+--- src/position.h	(revision 3586)
++++ src/position.h	(working copy)
+@@ -24,6 +24,8 @@
+ #include "sqset.h"
+ #include "tokens.h"
+ 
++class Game;
++
+ //////////////////////////////////////////////////////////////////////
+ //  Position:  Constants
+ 
+@@ -77,6 +79,8 @@
+     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     //  Position:  Data structures
+ 
++    Game *          Owner;
++
+     pieceT          Board[66];      // the actual board + a color square
+                                     // and a NULL square.
+     uint            Count[2];       // count of pieces & pawns each
+@@ -95,6 +99,8 @@
+                                         // whether piece is pinned to its
+                                         // own king and dir from king.
+ 
++    squareT         RookOrigSq[2][2];    // sq of castling rook per color, side
++
+     squareT         EPTarget;       // square pawns can EP capture to
+     colorT          ToMove;
+     ushort          HalfMoveClock;  // Count of halfmoves since last capture
+@@ -138,11 +144,12 @@
+     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     //  Position:  Public Functions
+ public:
+-    Position()   { Init(); }
++    Position()   { Init( NULL ); }
++    Position(Game * owner)   { Init( owner ); }
+     Position(const Position& p);
+     ~Position()  {}
+ 
+-    void        Init();
++    void        Init(Game * owner);
+     void        Clear();        // No pieces on board
+     void        StdStart();     // Standard chess starting position
+     bool        IsStdStart();
+@@ -162,6 +169,12 @@
+     MoveList *  GetLegalMoves ()         { return &LegalMoves; }
+ 
+ 
++    Game *      GetOwner()               { return Owner; }
++    void        SetOwner(Game * owner)   { Owner = owner; }
++
++    void        SetRookOrigSq( colorT color, castleDirT side, squareT sq );
++    squareT     GetRookOrigSq( colorT color, castleDirT side );
++
+     // Methods to get the Board or piece lists -- used in game.cpp to
+     // decode moves:
+     squareT *   GetList (colorT c)    { return List[c]; }
+Index: src/tkscid.cpp
+===================================================================
+--- src/tkscid.cpp	(revision 3586)
++++ src/tkscid.cpp	(working copy)
+@@ -504,8 +504,8 @@
+     clipbase->backupCache->SetPolicy (TREECACHE_Oldest);
+ 
+     currentBase = 0;
+-    scratchPos = new Position;
+     scratchGame = new Game;
++    scratchPos = new Position(scratchGame);
+     db = &(dbList[currentBase]);
+ 
+ #ifndef TCL_ONLY
+@@ -1010,7 +1010,6 @@
+         }
+         return TCL_ERROR;
+     }
+-
+     if (db->nb->ReadNameFile() != OK) {
+         base_open_failure(oldBaseNum);
+         return errorResult (ti, "Error opening name file.");
+@@ -3448,115 +3447,10 @@
+ 
+ //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ // sc_base_upgrade:
+-//    Upgrades an old (version 3.x, suffix .si3) Scid database
+-//    to version 4 (suffix .si4).
++//    Stub, as si4 db format is unchanged to 9 (960)
+ int
+ sc_base_upgrade (ClientData cd, Tcl_Interp * ti, int argc, const char ** argv)
+ {
+-    bool showProgress = startProgressBar();
+-
+-    if (argc != 3) {
+-        return errorResult (ti, "Usage: sc_base upgrade <old-database>");
+-    }
+-    const char * fname = argv[2];
+-    Index * oldIndex = new Index;
+-    Index * newIndex = new Index;
+-
+-    oldIndex->SetFileName (fname);
+-    newIndex->SetFileName (fname);
+-
+-    if (newIndex->OpenIndexFile(FMODE_ReadOnly) == OK) {
+-        newIndex->CloseIndexFile();
+-        delete oldIndex;
+-        delete newIndex;
+-        return errorResult (ti, "An upgraded version of this database already exists.");
+-    }
+-
+-    if (oldIndex->OpenOldIndexFile (FMODE_ReadOnly) != OK) {
+-        delete oldIndex;
+-        delete newIndex;
+-        return errorResult (ti, "Error opening the old database.");
+-    }
+-
+-    if (newIndex->CreateIndexFile (FMODE_WriteOnly) != OK) {
+-        oldIndex->CloseIndexFile();
+-        delete oldIndex;
+-        delete newIndex;
+-        return errorResult (ti, "Error creating the new dataabse.");
+-    }
+-
+-    MFile * oldMFile = oldIndex->GetMFile();
+-    MFile * newMFile = newIndex->GetMFile();
+-
+-    char buf[256];
+-    // First copy the header with new version number
+-
+-    oldMFile->Seek(0);
+-    newMFile->Seek(0);
+-
+-    oldMFile->ReadNBytes( buf, 8);
+-    newMFile->WriteNBytes(buf, 8);
+-
+-    oldMFile->ReadTwoBytes();
+-    newMFile->WriteTwoBytes(SCID_VERSION);
+-
+-    oldMFile->ReadNBytes(buf, 4 + 3 + 3 + SCID_DESC_LENGTH + 1);
+-    newMFile->WriteNBytes(buf, 4 + 3 + 3 + SCID_DESC_LENGTH + 1);
+-
+-    // write the descriptions of the custom flags added with v4 version of base
+-    memset( buf, 0, 256 );
+-    newMFile->WriteNBytes( buf, CUSTOM_FLAG_MAX * ( CUSTOM_FLAG_DESC_LENGTH+1 ) );
+-
+-    // Now copy each index entry
+-    uint i;
+-    uint numGames = oldIndex->GetNumGames();
+-    errorT err = OK;
+-    uint updateStart = 250;
+-    uint update = updateStart;
+-
+-    for (i=0; i < numGames; i++) {
+-        if (showProgress) {
+-            update--;
+-            if (update == 0) {
+-                update = updateStart;
+-                if (interruptedProgress()) { break; }
+-                updateProgressBar (ti, i, numGames);
+-            }
+-        }
+-
+-        oldMFile->ReadNBytes(buf, 4 + 2);
+-        newMFile->WriteNBytes(buf, 4 + 2);
+-
+-        // insert one byte for Length_High and user bits
+-        newMFile->WriteNBytes( "\0", 1 );
+-
+-        oldMFile->ReadNBytes(buf, 40 );
+-        newMFile->WriteNBytes(buf, 40 );
+-
+-    }
+-
+-    oldIndex->CloseIndexFile();
+-    newIndex->CloseIndexFile(true); // don't write again the header
+-
+-    if (err == OK  &&  !interruptedProgress()) {
+-        if (err != OK) { setResult (ti, "Error writing name file"); }
+-    }
+-
+-    delete oldIndex;
+-    delete newIndex;
+-
+-    if (interruptedProgress()) {
+-        removeFile (fname, INDEX_SUFFIX);
+-        return errorResult (ti, "Upgrading was cancelled.");
+-    }
+-
+-    if (err != OK) {
+-        removeFile (fname, INDEX_SUFFIX);
+-        return TCL_ERROR;
+-    }
+-
+-    if (showProgress) { updateProgressBar (ti, 1, 1); }
+-
+     return TCL_OK;
+ }
+ 
+@@ -11231,6 +11125,7 @@
+     static const char * options [] = {
+         "-time", "-hashkb", "-pawnkb", "-post", "-pruning", "-mindepth", "-searchdepth", "-board", NULL
+     };
++
+     enum {
+         OPT_TIME, OPT_HASH, OPT_PAWN, OPT_POST, OPT_PRUNING, OPT_MINDEPTH, OPT_SEARCHDEPTH, OPT_BOARD
+     };
+@@ -11258,8 +11153,12 @@
+     // Init position
+     Position * pos;
+     if (*board) {
++      Tcl_AppendResult (ti, "sc_pos analyze: board command disabled for chess960.",NULL);
++      return TCL_ERROR;
++
+       pos = new Position;
+-      pos->Init();
++      pos->Init(NULL); // for compilation only... need to find a game for parent :( S.A.
++
+       if (pos->ReadFromLongStr((const char*)board) != OK) {
+         delete pos;
+         return TCL_ERROR;
+@@ -15847,6 +15746,7 @@
+         char cboard [40];
+         pos->PrintCompactStrFlipped (cboard);
+         posFlip->ReadFromCompactStr ((byte *) cboard);
++        posFlip->SetOwner(db->game);
+         hpSigFlip = posFlip->GetHPSig();
+         msigFlip = matsig_Make (posFlip->GetMaterial());
+     }
+Index: tcl/edit.tcl
+===================================================================
+--- tcl/edit.tcl	(revision 3586)
++++ tcl/edit.tcl	(working copy)
+@@ -79,6 +79,9 @@
+       set fen "$s1 $s2 [lrange $fen 2 end]"
+   }
+ 
++  # Handle Shredder fen's HAha type castling field
++  set fenStr [::chess960::convertToXFEN $fenStr]
++ 
+   if {[catch {sc_game startBoard $fen}]} {
+     if {[string length $fen] > 80} {
+       set fen [string range $fen 0 80]
+@@ -344,6 +347,9 @@
+ 
+ proc sanityCheckFENCastling {fen} {
+ 
++  # Don't worry about validating castling in chess960
++  return $fen
++
+   # Castling part of the fen
+   set c [lindex $fen 2]
+ 
+@@ -672,6 +678,20 @@
+     ::board::update .setup.l.bd $setupBd
+   } -width 10
+ 
++  frame $sr.b.960
++
++  label $sr.b.960.text -text "960 code"
++  entry $sr.b.960.entry -width 4 -validate all -vcmd {string is int %P}
++  pack $sr.b.960.text $sr.b.960.entry -side left
++
++  bind  $sr.b.960.entry <Return> {
++    set SP [expr [.setup.r.b.960.entry get] %% 960]
++    if {$SP == 0} {set SP 960}
++    set setupFen  [::chess960::numberToFEN $SP]
++    sc_game tags set -extra [list {Variant "Fischerrandom"} "StartingPosition \"$SP\""]
++    setSetupBoardToFen
++  }
++
+   # Are these bullet-proof and correct ? 
+   # but make them a little smaller, as they are hardly used
+ 
+@@ -731,6 +751,7 @@
+   pack $sr.b.clear	-side top -padx 5 -pady 2
+   pack $sr.b.initial	-side top -padx 5 -pady 2
+   pack $sr.b.flip	-side top -padx 5 -pady 2
++  pack $sr.b.960        -side top -expand yes -fill x
+   pack [frame $sr.b.space -height 10] -side top
+   pack $sr.b.swap	-side top -padx 5 -pady 1
+   pack $sr.b.invert	-side top -padx 5 -pady 1
+Index: tcl/end.tcl
+===================================================================
+--- tcl/end.tcl	(revision 3586)
++++ tcl/end.tcl	(working copy)
+@@ -2077,7 +2077,7 @@
+ 
+ if {$defaultDBs != {}} {
+   if {$argc == 0 && $mac_args == 0} {
+-    if {[file readable [lindex $defaultDBs 0]] || [file readable "[lindex $defaultDBs 0].si4"]} {
++    if {[file readable [lindex $defaultDBs 0]] || [file readable "[lindex $defaultDBs 0].si960"]} {
+       ::splash::add "Using default bases: $defaultDBs"
+       set argv $defaultDBs
+       set argc [llength $argv]
+Index: tcl/file/bookmark.tcl
+===================================================================
+--- tcl/file/bookmark.tcl	(revision 3586)
++++ tcl/file/bookmark.tcl	(working copy)
+@@ -243,7 +243,7 @@
+     if {[string compare -nocase [string range $fname end-3 end] .pgn] == 0} {
+       ::recentFiles::add $fname
+     } else {
+-      ::recentFiles::add "[file rootname $fname].si4"
++      ::recentFiles::add "[file rootname $fname].si960"
+     }
+   }
+   # Find and load the best database game matching the bookmark:
+Index: tcl/file/finder.tcl
+===================================================================
+--- tcl/file/finder.tcl	(revision 3586)
++++ tcl/file/finder.tcl	(working copy)
+@@ -316,8 +316,8 @@
+ 
+   busyCursor .
+   update
+-  if { $ext == ".si4" } {
+-    if { [catch { file copy "$r.sg4" "$r$d.sg4" ; file copy "$r.sn4" "$r$d.sn4" } err ] } {
++  if { $ext == ".si960" } {
++    if { [catch { file copy "$r.sg960" "$r$d.sg960" ; file copy "$r.sn960" "$r$d.sn960" } err ] } {
+       unbusyCursor .
+       tk_messageBox -title Scid -icon error -type ok -message "File copy error $err"
+       return
+@@ -342,8 +342,8 @@
+   }
+   set dir [tk_chooseDirectory -initialdir [file dirname $f] -parent .finder]
+   if {$dir != ""} {
+-    if { [string tolower [file extension $f]] == ".si4" } {
+-      if { [catch { file copy "[file rootname $f].sg4" "[file rootname $f].sn4" $dir } err ] } {
++    if { [string tolower [file extension $f]] == ".si960" } {
++      if { [catch { file copy "[file rootname $f].sg960" "[file rootname $f].sn960" $dir } err ] } {
+         tk_messageBox -title Scid -icon error -type ok -message "File copy error $err" -parent .finder
+         return
+       }
+@@ -366,9 +366,9 @@
+   }
+   set dir [tk_chooseDirectory -initialdir [file dirname $f] -parent .finder ]
+   if {$dir != ""} {
+-    if { [string tolower [file extension $f]] == ".si4" } {
++    if { [string tolower [file extension $f]] == ".si960" } {
+       
+-      if { [catch { file rename "[file rootname $f].sg4" "[file rootname $f].sn4" $dir } err ] } {
++      if { [catch { file rename "[file rootname $f].sg960" "[file rootname $f].sn960" $dir } err ] } {
+         tk_messageBox -title Scid -icon error -type ok -message "File rename error $err" -parent .finder
+         return
+       }
+@@ -408,15 +408,15 @@
+ 
+   set n "[file dirname $f]/$newname"
+ 
+-  if { [string tolower [file extension $f]] == {.si4} } {
+-    if {[file exists "$newname.si4"]} {
+-      tk_messageBox -title Scid -icon error -type ok -message "$newname.si4 already exists" -parent .finder
++  if { [string tolower [file extension $f]] == {.si960} } {
++    if {[file exists "$newname.si960"]} {
++      tk_messageBox -title Scid -icon error -type ok -message "$newname.si960 already exists" -parent .finder
+       return
+     }
+ 
+     if { [catch {
+-	    file rename "$r.sg4" "$n.sg4"
+-	    file rename "$r.sn4" "$n.sn4"
++	    file rename "$r.sg960" "$n.sg960"
++	    file rename "$r.sn960" "$n.sn960"
+ 	 } err ] } {
+       tk_messageBox -title Scid -icon error -type ok -message "File copy error $err"
+       return
+@@ -477,8 +477,8 @@
+   set answer [tk_messageBox -title Scid -icon warning -type yesno -parent .finder \
+                 -message "Do you want to permanently delete $f ?"]
+   if {$answer == "yes"} {
+-    if { [string tolower [file extension $f]] == ".si4" } {
+-      file delete "[file rootname $f].sg4" "[file rootname $f].sn4" "[file rootname $f].stc"
++    if { [string tolower [file extension $f]] == ".si960" } {
++      file delete "[file rootname $f].sg960" "[file rootname $f].sn960" "[file rootname $f].stc"
+     }
+     file delete $f
+   }
+@@ -527,10 +527,10 @@
+       set showFile 0
+       set rootname [file rootname $f]
+       set type PGN
+-      if {$ext == ".si4"} {
++      if {$ext == ".si960"} {
+         set showFile 1
+         set type Scid
+-      } elseif {$ext == ".si3"} {
++      } elseif {$ext == ".si4"} {
+         set showFile 1
+         set type Old
+       } elseif {$ext == ".epd"} {
+Index: tcl/file/maint.tcl
+===================================================================
+--- tcl/file/maint.tcl	(revision 3586)
++++ tcl/file/maint.tcl	(working copy)
+@@ -12,7 +12,7 @@
+ ################################################################################
+ proc ::maint::fixCorruptedBase {} {
+   set ftype {
+-    { "Scid databases" {".si4"} }
++    { "Scid databases" {".si960"} }
+   }
+   set fName [tk_getOpenFile -initialdir $::initialDir(base) -filetypes $ftype -title "Open a Scid file"]
+   if {$fName == ""} { return }
+Index: tcl/file/recent.tcl
+===================================================================
+--- tcl/file/recent.tcl	(revision 3586)
++++ tcl/file/recent.tcl	(working copy)
+@@ -75,7 +75,7 @@
+ 
+ proc ::recentFiles::load {fname} {
+   set rname $fname
+-  if {[file extension $rname] == ".si4"} {
++  if {[file extension $rname] == ".si960"} {
+     set rname [file rootname $rname]
+   }
+   for {set i 1} {$i <= [sc_base count total]} {incr i} {
+Index: tcl/file.tcl
+===================================================================
+--- tcl/file.tcl	(revision 3586)
++++ tcl/file.tcl	(working copy)
+@@ -101,8 +101,8 @@
+     return
+   }
+   set ftype {
+-    { "Scid databases, EPD files" {".si4" ".epd"} }
+-    { "Scid databases" {".si4"} }
++    { "Scid databases, EPD files" {".si960" ".epd"} }
++    { "Scid databases" {".si960"} }
+     { "EPD files" {".epd"} }
+   }
+   if {! [file isdirectory $::initialDir(base)] } {
+@@ -116,7 +116,7 @@
+       return
+     }
+   } else {
+-    if {[file extension $fName] == ".si4"} {
++    if {[file extension $fName] == ".si960"} {
+       set fName [file rootname $fName]
+     } 
+     if {[catch {sc_base create $fName} result]} {
+@@ -126,7 +126,7 @@
+     }
+     # set default icon
+     catch {sc_base type [sc_base current] 1}
+-    set fName $fName.si4
++    set fName $fName.si960
+   }
+   set ::glistFlipped([sc_base current]) 0
+   ::recentFiles::add $fName
+@@ -141,7 +141,6 @@
+ # But it is used everywhere, and will take some time to fix
+ 
+ proc ::file::Open {{fName ""} {parent .} {update 1}} {
+-
+   if {[sc_base count free] == 0} {
+     tk_messageBox -type ok -icon info -title Scid \
+         -message "Too many databases are open; close one first" -parent $parent
+@@ -150,15 +149,15 @@
+ 
+   if {[sc_info gzip]} {
+     set ftype {
+-      { {All Scid files} {.si4 .si3 .pgn .PGN .pgn.gz .epd .epd.gz} }
+-      { {Scid databases} {.si4 .si3} }
++      { {All Scid files} {.si960 .si4 .pgn .PGN .pgn.gz .epd .epd.gz} }
++      { {Scid databases} {.si960 .si4} }
+       { {PGN files} {.pgn .PGN .pgn.gz} }
+       { {EPD files} {.epd .EPD .epd.gz} }
+     }
+   } else {
+     set ftype {
+-      { {All Scid files} {.si4 .si3 .pgn .PGN .epd} }
+-      { {Scid databases} {.si4 .si3} }
++      { {All Scid files} {.si960 .si4 .pgn .PGN .epd} }
++      { {Scid databases} {.si960 .si4} }
+       { {PGN files} {.pgn .PGN} }
+       { {EPD files} {.epd .EPD} }
+     }
+@@ -175,17 +174,17 @@
+   setTrialMode 0 0
+ 
+   set ext [file extension $fName]
+-  if {$ext == "" || [file readable "$fName.si4"]} {
+-    set fName "$fName.si4"
+-    set ext .si4
++  if {$ext == "" || [file readable "$fName.si960"]} {
++    set fName "$fName.si960"
++    set ext .si960
+   }
+ 
+-  if {$ext == ".sg4" || $ext == ".sn4"} {
+-    set fName "[file rootname $fName].si4"
+-    set ext .si4
++  if {$ext == ".sg960" || $ext == ".sn960"} {
++    set fName "[file rootname $fName].si960"
++    set ext .si960
+   }
+ 
+-  if {$ext == ".si3" && [file exists $fName]} {
++  if {$ext == ".si4" && [file exists $fName]} {
+     ::file::Upgrade [file rootname $fName]
+     return
+   }
+@@ -206,7 +205,7 @@
+   set err 0
+   busyCursor .
+ 
+-  if {$ext == ".si4"} {
++  if {$ext == ".si960"} {
+     set fName [file rootname $fName]
+     if {[catch {openBase $fName} result]} {
+       set err 1
+@@ -216,11 +215,11 @@
+       unbusyCursor .
+       tk_messageBox -icon warning -type ok -parent $parent \
+           -title "Scid: Error opening file" -message "$result"
+-      ::recentFiles::remove "$fName.si4"
++      ::recentFiles::remove "$fName.si960"
+       return -1
+     } else {
+       set ::initialDir(base) [file dirname $fName]
+-      ::recentFiles::add "$fName.si4"
++      ::recentFiles::add "$fName.si960"
+     }
+   } elseif {[string match "*.epd" [string tolower $fName]]} {
+     # EPD file:
+@@ -400,14 +399,14 @@
+ 
+ # ::file::Upgrade
+ #
+-#   Upgrades an old (version 3) Scid database to version 4.
++#   Upgrades an old (version 4) Scid database to version 960.
+ #
+ proc ::file::Upgrade {name} {
+-  if {[file readable "$name.si4"]} {
++  if {[file readable "$name.si960"]} {
+     set msg [string trim $::tr(ConfirmOpenNew)]
+     set res [tk_messageBox -title Scid -type yesno -icon info -message $msg]
+     if {$res == "no"} { return }
+-    ::file::Open "$name.si4"
++    ::file::Open "$name.si960"
+     return
+   }
+ 
+@@ -414,36 +413,30 @@
+   set msg [string trim $::tr(ConfirmUpgrade)]
+   set res [tk_messageBox -title Scid -type yesno -icon info -message $msg]
+   if {$res == "no"} { return }
+-  progressWindow Scid "$::tr(Upgrading): [file tail $name]"\
+-      $::tr(Cancel) sc_progressBar
+-  busyCursor .
+-  update
+   set err [catch {sc_base upgrade $name} res]
+-  unbusyCursor .
+-  closeProgressWindow
+   if {$err} {
+     tk_messageBox -title Scid -type ok -icon warning \
+         -message "Unable to upgrade the database:\n$res"
+     return
+   } else  {
+-    # rename game and name files, delete old .si3
+-    file rename "$name.sg3"  "$name.sg4"
+-    file rename "$name.sn3"  "$name.sn4"
+-    file delete "$name.si3"
++    # rename game and name files, delete old .si4
++    file rename "$name.sg4"  "$name.sg960"
++    file rename "$name.sn4"  "$name.sn960"
++    file rename "$name.si4"  "$name.si960"
+   }
+-  ::file::Open "$name.si4"
++  ::file::Open "$name.si960"
+ }
+ 
+ #    Opens a Scid database, showing a progress bar in a separate window
+ #    if the database is around 5 Mb or larger in size.
+-#   ::file::Open should be used if the base is not already in si4 format
++#   ::file::Open should be used if the base is not already in si960 format
+ 
+ proc openBase {name} {
+ 
+   # This check should probably be done somewhere else
+   # But fixing issue/all scenarios is very painful , so leave it here steven!
+-  if {![file exists $name.si4]} {
+-    return -code error "File \"$name.si4\" doesn't exist."
++  if {![file exists $name.si960]} {
++    return -code error "File \"$name.si960\" doesn't exist."
+   }
+ 
+   # Depending on how file is opened, windows can have "\" file separators
+@@ -457,8 +450,8 @@
+   set bsize 0
+ 
+   ### wrong i think
+-  # set gfile "[file rootname $name].sg4" 
+-  set gfile "$name.sg4"
++  # set gfile "[file rootname $name].sg960" 
++  set gfile "$name.sg960"
+ 
+   if {! [catch {file size $gfile} err]} { set bsize $err }
+   set showProgress 0
+@@ -583,14 +576,14 @@
+   if {$fName == ""} {
+     if {[sc_info gzip]} {
+       set ftype {
+-        { "Scid databases, PGN files" {".si4" ".si3" ".pgn" ".PGN" ".pgn.gz"} }
+-        { "Scid databases" {".si4" ".si3"} }
++        { "Scid databases, PGN files" {".si960" ".si4" ".pgn" ".PGN" ".pgn.gz"} }
++        { "Scid databases" {".si960" ".si4"} }
+         { "PGN files" {".pgn" ".PGN" ".pgn.gz"} }
+       }
+     } else {
+       set ftype {
+-        { "Scid databases, PGN files" {".si4" ".si3" ".pgn" ".PGN"} }
+-        { "Scid databases" {".si4" ".si3"} }
++        { "Scid databases, PGN files" {".si960" ".si4" ".pgn" ".PGN"} }
++        { "Scid databases" {".si960" ".si4"} }
+         { "PGN files" {".pgn" ".PGN"} }
+       }
+     }
+@@ -607,10 +600,10 @@
+ 
+ 
+   if {[file extension $fName] == ""} {
+-    set fName "$fName.si4"
++    set fName "$fName.si960"
+   }
+ 
+-  if {[file extension $fName] == ".si3" && [file exists $fName]} {
++  if {[file extension $fName] == ".si4" && [file exists $fName]} {
+     ::file::Upgrade [file rootname $fName]
+     return
+   }
+@@ -617,7 +610,7 @@
+ 
+   ### Check it is not already open
+   # Name handling is a little clumsy, but is tested
+-  if {[file extension $fName] == ".si4"} {
++  if {[file extension $fName] == ".si960"} {
+     set rName [file rootname $fName]
+   } else {
+     set rName $fName
+@@ -631,7 +624,7 @@
+ 
+   set err 0
+   busyCursor .
+-  if {[file extension $fName] == ".si4"} {
++  if {[file extension $fName] == ".si960"} {
+     set fName [file rootname $fName]
+     if {[catch {openBase $fName} result]} {
+       unbusyCursor .
+@@ -641,7 +634,7 @@
+     } else {
+       set ::initialDir(base) [file dirname $fName]
+       set ::initialDir(file) [file tail $fName]
+-      ::recentFiles::add "$fName.si4"
++      ::recentFiles::add "$fName.si960"
+     }
+   } else {
+     # PGN file:
+@@ -783,7 +776,7 @@
+       append message \n\n [join $rejectList \n]
+     }
+     set detail [tr UriRejectedDetail]
+-    append detail " .sci, .si4, .si3, .cbh, .pgn, .pgn.gz, .zip"
++    append detail " .sci, .si960, .si4, .cbh, .pgn, .pgn.gz, .zip"
+     tk_messageBox -icon info -type ok -parent . -message $message -detail $detail
+   }
+ 
+Index: tcl/help/help.tcl
+===================================================================
+--- tcl/help/help.tcl	(revision 3587)
++++ tcl/help/help.tcl	(working copy)
+@@ -5,6 +5,7 @@
+ 
+   <ht><img icon></ht>
+   <ht><a Intro>Introduction</a></ht>
++  <ht><a 960>Scid vs PC 960</a></ht>
+   <ht><a GUI>Using the GUI</a></ht>
+   <ht><a BrowsingPGN>PGN Files and Scid</a></ht>
+   <ht><a Analysis>Running Chess Engines</a></ht>
+@@ -18,6 +19,21 @@
+   <br>
+   <p><footer>$::scidName  version $::scidVersion</footer></p>
+ "
++set helpTitle(960) "$::scidName"
++set helpText(960) {<h1>Scid vs PC 960</h1>
++<p>
++This is a patched version of Scid vs PC supporting Fischer Chess / Chess 960, from the source patch "chess960-new.patch", including some backend modifications by Britton Farrar.
++Because of these mods, any si4 database opened will be converted/renamed to .si960. But the format does not change, and renaming them back to si4 should be ok <b>as long as any Chess960 games are removed, as they are otherwise essentially broken games with regards to castling, and bad things may happen.</b>
++</p>
++<p>Most chess engines will not support Chess960. The relevant UCI option is <b>UCI_Chess960</b>.
++Scid vs PC will enable this option at engine init <b>if no user options have already been saved</b>, but it can thence be overridden by the user in Engine Configuration, so check there if experiencing engine difficulties. Stockfish does support UCI_Chess960, but I do not know how it works with Stockfish NNUE.</p>
++<p>The new Score Bar feature is disabled for Fics and the Game Browser windows.</p>
++<p>Parralel installation with normal ScidvsPC on Linux is only possible in different directory trees (ie /usr and /usr/local), because the backend executables have the same name still (tkscid).  So please read the output of "./configure --help" carefully. the new Linux GUI is named <b>scid-vs-960</b>.</p>
++<p>Interface changes are minimal. There does exist a new entrybox in the Setup Board window, to allow entry of a specific 960 code.</p>
++<p>Chess 960 Essay <url http://www.dwheeler.com/essays/Fischer_Random_Chess.html>http://www.dwheeler.com/essays/Fischer_Random_Chess.html</url></p>
++</ul>
++<p><footer>Updated: Scid vs. PC 4.26 Feb 2025</footer></p>
++}
+ set helpTitle(Intro) "$::scidName"
+ set helpText(Intro) {<h1>Introduction</h1>
+ 
+@@ -255,6 +271,7 @@
+   <h3><name C>C</name></h3>
+   <ul>
+   <li><a Changelog>Changelog</a></li>
++  <li><a 960>Chess 960</a>/Fischer Random Chess</li>
+   <li><a Analysis>Chess Engines</a></li>
+   <li><a Analysis List>Chess Engine</a> configuration</li>
+   <li><a Analysis Debugging>Chess Engine</a>  debugging</li>
+@@ -4446,6 +4463,7 @@
+   <li>Project page  <url http://sourceforge.net/projects/scidvspc>http://sourceforge.net/projects/scidvspc</url></li>
+   <li>Online documentation <url http://scidvspc.sourceforge.net/doc/Contents.htm>http://scidvspc.sourceforge.net/doc/Contents.htm</url></li>
+   <br>
++ <li>Chess 960 Essay <url http://www.dwheeler.com/essays/Fischer_Random_Chess.html>http://www.dwheeler.com/essays/Fischer_Random_Chess.html</url></li>
+  <li>Lumbra's Gigabase <url https://lumbrasgigabase.com/en/>https://lumbrasgigabase.com/en/</url></li>
+   <li>Player Information resources  <url http://sourceforge.net/projects/scid/files/Player Data/>http://sourceforge.net/projects/scid/files/Player Data/</url></li>
+   <li>FICS <url http://www.freechess.org>www.freechess.org</url></li>
+Index: tcl/lang/english.tcl
+===================================================================
+--- tcl/lang/english.tcl	(revision 3586)
++++ tcl/lang/english.tcl	(working copy)
+@@ -1397,15 +1397,13 @@
+ # Upgrading databases:
+ translate E Upgrading {Upgrading}
+ translate E ConfirmOpenNew {
+-This is an old-format (si3) database that cannot be opened in Scid 4.0, but a new-format (si4) version has already been created.
++This is an old-format (si4) database, but a new-format (si960) version has already been created.
+ 
+ Do you want to open the new-format version of the database?
+ }
+ translate E ConfirmUpgrade {
+-This is an "si3" format database. It must be converted to "si4" before it can be used in Scid vs. PC 4.0.
++This is an "si4" format database. It must be renamed to "si960" before being used Scid vs. 960.
+ 
+-This process is irreversible and only needs to be done once. You can cancel if it takes too long.
+-
+ Do you want to upgrade this database now?
+ }
+ 
+Index: tcl/main.tcl
+===================================================================
+--- tcl/main.tcl	(revision 3586)
++++ tcl/main.tcl	(working copy)
+@@ -1296,6 +1296,7 @@
+ #   piece from the user.
+ #   If the optional parameter is "-animate", the move will be animated.
+ 
++#   sq1 == to, sq2 == from , but squares can also be selected in reverse order
+ proc addMove { sq1 sq2 {animate ""}} {
+   global EMPTY
+ 
+@@ -1317,8 +1318,44 @@
+     if {$k1 == "k"  &&  $k2 == "k"} {
+       set nullmove 1
+     } else {
+-      return
+-    }
++      # test/hack to see if we can translate old-style castling into 960 castling
++
++      set side [sc_pos side]
++      if {(($k1 == "k" && $k2 == ".") || ($k2 == "k" && $k1 == ".")) && [expr {abs ($sq1 - $sq2)}] == 2} {
++	  if {$k1 == "k"} {
++	    # test correct-side-to-move
++	    set king [string index $board $sq1]
++	    if {$side == "white" && $king == "k" || $side == "black" && $king == "K"} {return}
++
++	    set sign [expr {($sq2 - $sq1)/2}]
++            set sq2 [expr {$sq2 - $sign}] ; # to check neighbouring square
++            #incr sq2 till we hit a rook
++
++	    while {[string index $board $sq2] == "."} {
++	       incr sq2 $sign
++	    }
++            if {[string tolower [string index $board $sq2]] != "r"} {
++              return
++            }
++          } else {
++	    ### {$k2 == "k"}
++	    # test correct-side-to-move
++	    set king [string index $board $sq2]
++	    if {$side == "white" && $king == "k" || $side == "black" && $king == "K"} {return}
++
++	    set sign [expr {($sq1 - $sq2)/2}]
++            set sq1 [expr {$sq1 - $sign}]
++	    while {[string index $board $sq1] == "."} {
++	       incr sq1 $sign
++	    }
++            if {[string tolower [string index $board $sq1]] != "r"} {
++              return
++            }
++          }
++      } else {
++	return 
++      }
++    } 
+   }
+   if {$nullmove && [sc_pos isCheck]} {
+       # dont add null move in check or mate
+Index: tcl/menus.tcl
+===================================================================
+--- tcl/menus.tcl	(revision 3586)
++++ tcl/menus.tcl	(working copy)
+@@ -1521,8 +1521,8 @@
+ set m .menu.options.evalbar
+ menu $m -tearoff -1
+ $m add checkbutton -label OptionsEvalMain -variable ::gameInfo(showEval) -command ::board::toggleeval
+-$m add checkbutton -label OptionsEvalBrowser -variable ::gbrowser::showEval
+-$m add checkbutton -label OptionsEvalFics  -variable ::fics::showEval
++$m add checkbutton -label OptionsEvalBrowser -variable ::gbrowser::showEval -state disabled
++$m add checkbutton -label OptionsEvalFics  -variable ::fics::showEval -state disabled
+ $m add checkbutton -label OptionsEvalTicks -variable ::evalTicks -command ::board::update_evalbar
+ $m add checkbutton -label OptionsEvalLog  -variable ::evalUseLog -command ::board::update_evalbar
+ $m add cascade -label OptionsEvalScale -menu $m.evalscale
+@@ -1530,7 +1530,7 @@
+ for {set i 1} { $i <= 10 } { incr i } {
+   $m.evalscale add radiobutton -label "$i" -variable ::evalScale -value $i -command ::board::update_evalbar
+ }
+-$m add cascade -label OptionsEvalTime -menu $m.evaltime
++$m add cascade -label OptionsEvalTime -menu $m.evaltime -state disabled
+ menu $m.evaltime
+ foreach i {50 100 150 200 300 400 500 600 800 1000} {
+   $m.evaltime add radiobutton -label "$i ms" -variable ::evalTime -value $i
+Index: tcl/misc/misc.tcl
+===================================================================
+--- tcl/misc/misc.tcl	(revision 3586)
++++ tcl/misc/misc.tcl	(working copy)
+@@ -1236,4 +1236,187 @@
+   unbusyCursor .  
+ }
+ 
++namespace eval chess960 {}
++
++proc ::chess960::Outermost {side col} {
++	variable board	;# is array[2] of { LHS King RHS }
++
++	set index [expr {[lindex $board $side 1] ? 2 : 0}]
++	set c [lindex $board $side $index]
++
++	if {$c == 0 || ($index == 0 ? $col < $c : $c < $col)} {
++		lset board $side $index $col
++	}
++}
++
++
++proc ::chess960::Setup {str} {
++	variable board	;# is array[2] of { LHS King RHS }
++
++	set row 1
++	set col 1
++
++	foreach ch [split $str ""] {
++		if {[string is digit $ch]} {
++			incr col [expr {[scan $ch "%c"] - 48}] ;# "0" has ASCII 48
++		} else {
++			switch $ch {
++				"/" { incr row; set col 0 }
++				"R" { if {$row == 8} { Outermost 0 $col } }
++				"r" { if {$row == 1} { Outermost 1 $col } }
++				"K" { if {$row == 8} { lset board 0 1 $col } }
++				"k" { if {$row == 1} { lset board 1 1 $col } }
++			}
++
++			incr col
++		}
++	}
++
++	if {[lindex $board 0 1] == 0 && [lindex $board 1 1] == 0} {
++		return 0
++	}
++
++	return 1
++}
++
++
++proc ::chess960::MapPiece {side index ch} {
++	variable board	;# is array[2] of { LHS King RHS }
++
++	set col [lindex $board $side $index]
++	if {$col} {
++		return [format "%c" [expr {$col + ($side ? 96 : 64)}]] ;# 64 is 'A'-1; 96 is 'a'-1
++	}
++	return $ch
++}
++
++
++# Convert X-FEN to Shredder-FEN.
++#
++# This function expects a valid FEN, otherwise the result is undetermined.
++# It doesn't matter if the given FEN is already a Shredder-FEN.
++proc ::chess960::convertToShredder {fen} {
++	variable board	;# is array[2] of { LHS King RHS }
++
++	if {[llength $fen] < 3} {
++		return $fen
++	}
++
++	set board {{0 0 0} {0 0 0}}
++
++	if {![Setup [lindex $fen 0]]} {
++		return $fen
++	}
++
++	set rights ""
++
++	foreach ch [split [lindex $fen 2] ""] {
++		switch $ch {
++			"K" { append rights [MapPiece 0 2 "K"] }
++			"Q" { append rights [MapPiece 0 0 "Q"] }
++			"k" { append rights [MapPiece 1 2 "k"] }
++			"q" { append rights [MapPiece 1 0 "q"] }
++
++			default { append rights $ch }
++		}
++	}
++
++	lset fen 2 $rights
++	return $fen
++}
++
++
++# Convert Shredder-FEN to X-FEN.
++#
++# This function expects a valid FEN, otherwise the result is undetermined.
++# It doesn't matter if the given FEN is already a X-FEN.
++proc ::chess960::convertToXFEN {fen} {
++	variable board	;# is array[2] of { LHS King RHS }
++
++	if {[llength $fen] < 3} {
++		return $fen
++	}
++
++	set board {{0 0 0} {0 0 0}}
++
++	if {![Setup [lindex $fen 0]]} {
++		return $fen
++	}
++
++	set rights ""
++
++	foreach ch [split [lindex $fen 2] ""] {
++		if {[string is upper $ch]} {
++			set file [expr {[scan $ch "%c"] - 64}] ;# 64 is 'A'-1
++
++			if {$file == [lindex $board 0 0]} {
++				append rights "Q"
++			} elseif {$file == [lindex $board 0 2]} {
++				append rights "K"
++			} else {
++				append rights $ch
++			}
++		} elseif {[string is lower $ch]} {
++			set file [expr {[scan $ch "%c"] - 96}] ;# 96 is 'a'-1
++
++			if {$file == [lindex $board 1 0]} {
++				append rights "q"
++			} elseif {$file == [lindex $board 1 2]} {
++				append rights "k"
++			} else {
++				append rights $ch
++			}
++		} else {
++			append rights $ch
++		}
++	}
++
++	lset fen 2 $rights
++	return $fen
++}
++
++
++proc ::chess960::numberToFEN {number} {
++	set KRN {"NNRKR" "NRNKR" "NRKNR" "NRKRN" "RNNKR" "RNKNR" "RNKRN" "RKNNR" "RKNRN" "RKRNN"}
++	set pattern "XXXXXXXX"
++	set number [expr {$number%960}]
++
++	set r [expr {$number%4}]
++	set q [expr {$number/4}]
++	set m [expr {$r*2 + 1}]
++	set r [expr {$q%4}]
++	set q [expr {$q/4}]
++	set n [expr {$r*2}]
++	set r [expr {$q%6}]
++	set q [expr {$q/6}]
++
++	set pattern [string replace $pattern $m $m "B"]
++	set pattern [string replace $pattern $n $n "B"]
++
++	for {set i 0} {$i < 8} {incr i} {
++		set ch [string index $pattern $i]
++		if {$ch eq "X" && [incr r -1] == -1} {
++			break;
++		}
++	}
++	set pattern [string replace $pattern $i $i "Q"]
++
++	set n 0
++	set krn [lindex $KRN $q]
++	for {set i 0} {$i < 8} {incr i} {
++		set ch [string index $pattern $i]
++		if {$ch eq "X"} {
++			set pattern [string replace $pattern $i $i [string index $krn $n]]
++			incr n
++		}
++	}
++
++	append fen [string tolower $pattern]
++	append fen "/pppppppp/8/8/8/8/PPPPPPPP/"
++	append fen $pattern
++	append fen " w KQkq - 0 1"
++
++	return $fen
++}
++
+ # end of misc.tcl
+Index: tcl/start.tcl
+===================================================================
+--- tcl/start.tcl	(revision 3586)
++++ tcl/start.tcl	(working copy)
+@@ -43,7 +43,7 @@
+   set macOS 1
+   set macCocoa [expr {!("AppKit" ni [winfo server .])}]
+   # set macCarbon [string match QD* [winfo server .]]
+-  set scidName {Scid vs. Mac}
++  set scidName {Scid vs. Mac 960}
+   if {[file isdirectory /usr/local/bin]} {
+     # Wish does not use the Bash path for some reason
+     set env(PATH) $env(PATH):/usr/local/bin
+@@ -55,7 +55,7 @@
+ } else {
+   set macOS 0
+   set macCocoa 0
+-  set scidName {Scid vs. PC}
++  set scidName {Scid vs. 960}
+ }
+ 
+ # Check that on Unix, the version of tkscid matches the version of this
+@@ -315,7 +315,7 @@
+   # so choose something dumb
+   set scidLogDir {C:\log}
+ } else {
+-  set scidUserDir [file nativename "~/.scidvspc"]
++  set scidUserDir [file nativename "~/.scidvs960"]
+   set scidLogDir [file nativename [file join $scidUserDir "log"]]
+ }
+ 
+@@ -1469,8 +1469,8 @@
+       if {$ext == ".sg4" || $ext == ".sn4"} {
+         set file "[file rootname $file].si4"
+       }
+-      if {$ext == ".sg3" || $ext == ".sn3"} {
+-        set file "[file rootname $file].si3"
++      if {$ext == ".sg960" || $ext == ".sn960"} {
++        set file "[file rootname $file].si960"
+       }
+ 
+       # Check if base is already opened
+@@ -1605,6 +1605,8 @@
+ } else {
+   ::splash::add "Loaded options from \"$optionsFile\"."
+ }
++set ::gbrowser::showEval 0
++set ::fics::showEval 0
+ 
+ # Hack to unset previous exportStartFile(Latex)
+ if {[string match *pstricks-add* $exportStartFile(Latex)]} {
+@@ -2025,6 +2027,7 @@
+ ::splash::add "http://scidvspc.sourceforge.net"
+ ::splash::add ""
+ ::splash::add "(C) Steven Atkinson (stevenaaus@yahoo.com) 2008-2025"
++::splash::add "(C) Britton Farrar (brittonfarrar@gmail.com) 2016"
+ ::splash::add "(C) Pascal Georges 2006-2008"
+ ::splash::add "(C) Shane Hudson 1999-2004"
+ ::splash::add "(C) Gregor Cramer, Fulvio Benini and others."
+Index: tcl/tools/analysis.tcl
+===================================================================
+--- tcl/tools/analysis.tcl	(revision 3586)
++++ tcl/tools/analysis.tcl	(working copy)
+@@ -4066,6 +4066,7 @@
+     # proc is called for any change in board position (including new games, and simple moves)
+     set nonStdStart [sc_game startBoard]
+     if {$nonStdStart} {
++      # sendToEngine $n "setoption name UCI_Chess960 value true"
+       set analysis(startpos$n) "fen [sc_game startPos]"
+     } else {
+       set analysis(startpos$n) startpos
+Index: tcl/tools/fics.tcl
+===================================================================
+--- tcl/tools/fics.tcl	(revision 3588)
++++ tcl/tools/fics.tcl	(working copy)
+@@ -2253,6 +2253,7 @@
+       wm title $::dot_w "$::scidName: $white - $black (game $game: $::fics::timecontrol)"
+       updateBoard -pgn -animate
+     } elseif {$whiteTime > 0 && $blackTime > 0} {
++puts "HMMMM \n$fen \n[sc_pos fen]"
+       ### Game out of sync, probably due to player takeback request (or opponent take back 2).
+       ### But also used to load observed games
+       # After player takeback, game gets reconstructed, comments are zeroed. Opponents takeback is handled better elsewhere.
+@@ -2675,12 +2676,18 @@
+ 
+   proc checkAdd {} {
+     if {[winfo exists .fics] && ($::fics::playing == 1 || $::fics::playing == 2)}  {
+-      set moveUCI [sc_game info previousMoveUCI]
+-      if { [ string length $moveUCI ] == 5 } {
+-        set promoLetter [ string tolower [ string index $moveUCI end ] ]
+-        ::fics::writechan "promote $promoLetter"
++      # If just castled, send San move
++      set previousMove [sc_game info previousMove]
++      if {[string match O-O* $previousMove]} {
++        ::fics::writechan $previousMove
++      } else {
++	set moveUCI [sc_game info previousMoveUCI]
++	if { [ string length $moveUCI ] == 5 } {
++	  set promoLetter [ string tolower [ string index $moveUCI end ] ]
++	  ::fics::writechan "promote $promoLetter"
++	}
++	::fics::writechan [string range $moveUCI 0 3 ]
+       }
+-      ::fics::writechan [string range $moveUCI 0 3 ]
+ 
+       if {$::fics::playing == 1} {
+       ### Stop clock
+Index: tcl/tools/sergame.tcl
+===================================================================
+--- tcl/tools/sergame.tcl	(revision 3586)
++++ tcl/tools/sergame.tcl	(working copy)
+@@ -353,6 +353,10 @@
+       ::sergame::sendToEngine $n "setoption name Ponder value false"
+     }
+ 
++    if {[sc_game startBoard]} {
++      sendToEngine $n "setoption name UCI_Chess960 value true"
++    }
++
+     # if will follow a specific opening line
+     if {$isOpening} {
+       set fields [split [lindex $openingList $chosenOpening] ":"]
+Index: tcl/tools/tactics.tcl
+===================================================================
+--- tcl/tools/tactics.tcl	(revision 3586)
++++ tcl/tools/tactics.tcl	(working copy)
+@@ -153,7 +153,7 @@
+     # go through all bases and take descriptions
+     set baseList {}
+     set baseDesc {}
+-    set fileList [  lsort -dictionary [ glob -nocomplain -directory $basePath *.si4 ] ]
++    set fileList [  lsort -dictionary [ glob -nocomplain -directory $basePath *.si960 ] ]
+     foreach file  $fileList {
+       if {[sc_base slot $file] == 0} {
+         sc_base open [file rootname $file]
+Index: tcl/tools/uci.tcl
+===================================================================
+--- tcl/tools/uci.tcl	(revision 3586)
++++ tcl/tools/uci.tcl	(working copy)
+@@ -21,7 +21,7 @@
+ 
+   set optionToken {name type default min max var }
+   set optionImportant {MultiPV Hash OwnBook BookFile UCI_LimitStrength UCI_Elo Ponder Threads {Skill Level}}
+-  set optionToKeep { UCI_LimitStrength UCI_Elo UCI_ShredderbasesPath UCI_ShowWDL}
++  set optionToKeep { UCI_LimitStrength UCI_Elo UCI_ShredderbasesPath UCI_ShowWDL UCI_Chess960}
+   array set uciInfo {}
+   ################################################################################
+   #
+@@ -947,6 +947,15 @@
+         set ::uci::uciInfo(skill) [list UCI_Elo $value]
+       }
+     }
++    # Set UCI_Chess960 if it is an engine option, and not already explicitly set
++    if {[string match *UCI_Chess960* $analysis(uciOptions$n)]} {
++      if {[lsearch $options UCI_Chess960] == -1} {
++        ::splash::add "Enabling UCI_Chess960 for [lindex $engineData 0] (by default)."
++        ::sendToEngine $n "setoption name UCI_Chess960 value true"
++      }
++    } else {
++      ::splash::add "Warning, UCI engine [lindex $engineData 0] does not support option UCI_Chess960" error
++    }
+   }
+ 
+   ### Start an engine silently (for playing, not analysis)

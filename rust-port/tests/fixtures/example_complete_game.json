@@ -1,0 +1,117 @@
+{
+  "name": "example_complete_game",
+  "description": "Complete example showing all PGN features: tags, moves, variations, comments, and NAGs",
+  "input": {
+    "event": "World Chess Championship",
+    "site": "New York",
+    "date": "1972.07.23",
+    "round": "6",
+    "white": "Fischer, Robert James",
+    "black": "Spassky, Boris V",
+    "result": "1-0",
+    "white_elo": 2785,
+    "black_elo": 2660,
+    "eco": "B87",
+    "event_date": "1972.07.11",
+    "opening": "Sicilian Defense: Sozin Attack",
+    "fen": null,
+    "moves": [
+      {
+        "move_number": 1,
+        "white": {
+          "from": "e2",
+          "to": "e4",
+          "piece": "P",
+          "san": "e4",
+          "comment_before": null,
+          "comment_after": "The most popular opening move.",
+          "nags": [1],
+          "variations": []
+        },
+        "black": {
+          "from": "c7",
+          "to": "c5",
+          "piece": "p",
+          "san": "c5",
+          "comment_before": null,
+          "comment_after": "The Sicilian Defense, Fischer's favorite.",
+          "nags": [],
+          "variations": [
+            {
+              "comment": "The French Defense is another solid choice",
+              "moves": [
+                {"from": "e7", "to": "e6", "san": "e6"},
+                {"from": "d2", "to": "d4", "san": "d4"}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "move_number": 2,
+        "white": {
+          "from": "g1",
+          "to": "f3",
+          "piece": "N",
+          "san": "Nf3",
+          "comment_before": null,
+          "comment_after": "Developing the knight to its natural square.",
+          "nags": [],
+          "variations": []
+        },
+        "black": {
+          "from": "d7",
+          "to": "d6",
+          "piece": "p",
+          "san": "d6",
+          "comment_before": null,
+          "comment_after": null,
+          "nags": [],
+          "variations": []
+        }
+      },
+      {
+        "move_number": 3,
+        "white": {
+          "from": "d2",
+          "to": "d4",
+          "piece": "P",
+          "san": "d4",
+          "comment_before": null,
+          "comment_after": "White stakes out the center.",
+          "nags": [],
+          "variations": []
+        },
+        "black": {
+          "from": "c5",
+          "to": "d4",
+          "piece": "p",
+          "san": "cxd4",
+          "captured": "P",
+          "comment_before": null,
+          "comment_after": null,
+          "nags": [],
+          "variations": []
+        }
+      }
+    ]
+  },
+  "expected_pgn": "[Event \"World Chess Championship\"]\n[Site \"New York\"]\n[Date \"1972.07.23\"]\n[Round \"6\"]\n[White \"Fischer, Robert James\"]\n[Black \"Spassky, Boris V\"]\n[Result \"1-0\"]\n[WhiteElo \"2785\"]\n[BlackElo \"2660\"]\n[ECO \"B87\"]\n[EventDate \"1972.07.11\"]\n[Opening \"Sicilian Defense: Sozin Attack\"]\n\n1. e4 $1 {The most popular opening move.} c5 {The Sicilian Defense, Fischer's favorite.} (1... e6 {The French Defense is another solid choice} 2. d4) 2. Nf3 {Developing the knight to its natural square.} d6 3. d4 {White stakes out the center.} cxd4 1-0\n",
+  "options": {
+    "format": "plain",
+    "include_comments": true,
+    "include_variations": true,
+    "include_nags": true,
+    "short_header": false
+  },
+  "test_aspects": [
+    "standard_tags",
+    "optional_tags",
+    "move_numbering",
+    "comments",
+    "nags",
+    "variations",
+    "captures"
+  ],
+  "notes": "This is a comprehensive example fixture that tests multiple features at once. It demonstrates:\n- Standard seven tags plus optional tags (Elo, ECO, EventDate)\n- Move comments (after moves)\n- NAG annotations ($1 for good move)\n- Variations (alternative moves)\n- Capture notation (cxd4)\n- Proper PGN formatting with line breaks and indentation"
+}
