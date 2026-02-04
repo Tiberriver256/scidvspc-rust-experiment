@@ -540,10 +540,17 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     let mut decoder = MoveDecoder::from_fen(&fen_to_use).ok()?;
     let is_white = fen_to_use.contains(" w ");
     
-    // Parse moves with variations and NAGs
+    // Parse moves with variations, NAGs, and comments
     let mut output = Vec::new();
-    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output, false) {
-        Ok(_) => {
+    let mut comment_positions = Vec::new();
+    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output, &mut comment_positions, false) {
+        Ok(comments_start_pos) => {
+            // Read comments from end of game data
+            if !comment_positions.is_empty() {
+                let comments = read_comments(data, comments_start_pos, comment_positions.len());
+                insert_comments(&mut output, &comment_positions, &comments);
+            }
+            
             if output.is_empty() {
                 None
             } else {
@@ -564,6 +571,7 @@ fn decode_variation(
     mut is_white: bool,
     mut move_num: usize,
     output: &mut Vec<String>,
+    comment_positions: &mut Vec<usize>,
     initial_force_move_number: bool,
 ) -> Result<usize, String> {
     let mut pos = start_pos;
@@ -590,8 +598,9 @@ fn decode_variation(
                         pos += 1;
                     }
                 }
-                12 => { // COMMENT - skip for now
+                12 => { // COMMENT - mark position for later
                     pos += 1;
+                    comment_positions.push(output.len());
                 }
                 13 => { // START_MARKER - variation
                     pos += 1;
@@ -626,7 +635,7 @@ fn decode_variation(
                     
                     // Parse variation with position BEFORE last move
                     let mut var_output = Vec::new();
-                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output, true)?;
+                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output, comment_positions, true)?;
                     
                     // Output variation in parentheses
                     if !var_output.is_empty() {
@@ -711,4 +720,40 @@ fn decode_variation(
     }
     
     Ok(pos)
+}
+
+fn read_comments(data: &[u8], start_pos: usize, num_comments: usize) -> Vec<String> {
+    let mut comments = Vec::new();
+    let mut pos = start_pos;
+    
+    for _ in 0..num_comments {
+        if pos >= data.len() {
+            break;
+        }
+        
+        // Read null-terminated string
+        let comment_start = pos;
+        while pos < data.len() && data[pos] != 0 {
+            pos += 1;
+        }
+        
+        let comment_bytes = &data[comment_start..pos];
+        let comment = String::from_utf8_lossy(comment_bytes).to_string();
+        comments.push(comment);
+        
+        if pos < data.len() {
+            pos += 1; // Skip null terminator
+        }
+    }
+    
+    comments
+}
+
+fn insert_comments(output: &mut Vec<String>, positions: &[usize], comments: &[String]) {
+    // Insert comments at specified positions in reverse order to maintain indices
+    for (comment_idx, &output_idx) in positions.iter().enumerate().rev() {
+        if comment_idx < comments.len() && output_idx <= output.len() {
+            output.insert(output_idx, format!("{{{}}}", comments[comment_idx]));
+        }
+    }
 }
