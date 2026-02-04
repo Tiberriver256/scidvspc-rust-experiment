@@ -542,7 +542,7 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     
     // Parse moves with variations and NAGs
     let mut output = Vec::new();
-    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output) {
+    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output, false) {
         Ok(_) => {
             if output.is_empty() {
                 None
@@ -564,10 +564,11 @@ fn decode_variation(
     mut is_white: bool,
     mut move_num: usize,
     output: &mut Vec<String>,
+    initial_force_move_number: bool,
 ) -> Result<usize, String> {
     let mut pos = start_pos;
     let mut decoder_before_last_move: Option<MoveDecoder> = None;
-    let mut force_move_number = false; // Set to true after variations
+    let mut force_move_number = initial_force_move_number; // Set to true after variations
     
     while pos < data.len() {
         let byte_val = data[pos];
@@ -625,7 +626,7 @@ fn decode_variation(
                     
                     // Parse variation with position BEFORE last move
                     let mut var_output = Vec::new();
-                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output)?;
+                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output, true)?;
                     
                     // Output variation in parentheses
                     if !var_output.is_empty() {
