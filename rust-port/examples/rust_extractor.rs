@@ -377,102 +377,172 @@ fn extract_pgn(
 }
 
 fn extract_fen(data: &[u8]) -> Option<String> {
-    // Format: <optional tags> 0xFA 0x01 <header (6 bytes)> <FEN>\0 ...
-    // Need to skip tags first, then FEN starts at offset 8 from game marker
-    
-    if data.len() < 20 {
+    if data.len() < 2 {
         return None;
     }
     
-    // Find the game marker 0xFA 0x01
-    let mut marker_pos = 0;
-    for i in 0..data.len()-1 {
-        if data[i] == 0xFA && data[i+1] == 0x01 {
-            marker_pos = i;
-            break;
+    // Skip tags using same logic as extract_moves
+    const MAX_TAG_LEN: u8 = 240;
+    
+    let mut pos = 0;
+    let mut b = data[pos];
+    while b != 0 && pos < data.len() {
+        pos += 1;
+        if b == 255 {
+            pos += 3;
+        } else if b > MAX_TAG_LEN {
+            if pos >= data.len() {
+                return None;
+            }
+            let val_len = data[pos];
+            pos += 1 + val_len as usize;
+        } else {
+            pos += b as usize;
+            if pos >= data.len() {
+                return None;
+            }
+            let val_len = data[pos];
+            pos += 1 + val_len as usize;
         }
-    }
-    
-    if marker_pos == 0 && (data[0] != 0xFA || data[1] != 0x01) {
-        return None;  // No marker found
-    }
-    
-    // FEN starts 8 bytes after the marker
-    let fen_start = marker_pos + 8;
-    
-    if fen_start >= data.len() {
-        return None;
-    }
-    
-    // Find the end (null terminator)
-    let mut fen_end = fen_start;
-    while fen_end < data.len() && data[fen_end] != 0 {
-        fen_end += 1;
-    }
-    
-    if fen_end <= fen_start || fen_end >= data.len() {
-        return None;
-    }
-    
-    if let Ok(fen_candidate) = std::str::from_utf8(&data[fen_start..fen_end]) {
-        // Validate it's really FEN (should have slashes and "w" or "b")
-        if fen_candidate.contains('/') && 
-           (fen_candidate.contains(" w ") || fen_candidate.contains(" b ")) {
-            return Some(fen_candidate.to_string());
+        if pos >= data.len() {
+            return None;
         }
+        b = data[pos];
     }
     
-    None
+    // pos now points to the 0 byte ending tags
+    pos += 1; // Skip the 0 byte
+    
+    if pos >= data.len() {
+        return None;
+    }
+    
+    // Read flags byte
+    let flags = data[pos];
+    pos += 1;
+    
+    let has_custom_fen = (flags & 1) != 0;
+    
+    if !has_custom_fen {
+        return None; // No custom FEN
+    }
+    
+    // Find FEN end (null-terminated)
+    let fen_start = pos;
+    while pos < data.len() && data[pos] != 0 {
+        pos += 1;
+    }
+    
+    if pos >= data.len() {
+        return None;
+    }
+    
+    let fen_bytes = &data[fen_start..pos];
+    let fen_str = String::from_utf8_lossy(fen_bytes);
+    
+    // Validate it's FEN
+    if fen_str.contains('/') && 
+       (fen_str.contains(" w ") || fen_str.contains(" b ")) {
+        Some(fen_str.into_owned())
+    } else {
+        None
+    }
 }
 
-fn extract_moves(data: &[u8], gnum: usize, fen: &str) -> Option<String> {
-    // Format: <optional tags> 0xFA 0x01 <header (6 bytes)> <FEN>\0 <moves> 0x0F
-    // Need to find game marker first
+
+fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
+    // Format: <optional tags> <flags byte> <optional FEN\0> <moves> 0x0F
     
-    if data.len() < 10 {
+    if data.len() < 2 {
         return None;
     }
     
-    // Find the game marker 0xFA 0x01
-    let mut marker_pos = 0;
-    for i in 0..data.len()-1 {
-        if data[i] == 0xFA && data[i+1] == 0x01 {
-            marker_pos = i;
-            break;
+    // Skip tags by finding the byte with value 0 (end of tags)
+    // Tag format: if byte > 240, it's a common tag (byte - 241 = index)
+    //             if byte == 255, special 3-byte EventDate
+    //             else byte = tag name length
+    const MAX_TAG_LEN: u8 = 240;
+    
+    let mut pos = 0;
+    let mut b = data[pos];
+    while b != 0 && pos < data.len() {
+        pos += 1;
+        if b == 255 {
+            // Special 3-byte binary encoding of EventDate
+            pos += 3;
+        } else if b > MAX_TAG_LEN {
+            // Common tag: just skip the value
+            if pos >= data.len() {
+                return None;
+            }
+            let val_len = data[pos];
+            pos += 1 + val_len as usize;
+        } else {
+            // Custom tag: skip tag name then value
+            pos += b as usize;
+            if pos >= data.len() {
+                return None;
+            }
+            let val_len = data[pos];
+            pos += 1 + val_len as usize;
         }
+        if pos >= data.len() {
+            return None;
+        }
+        b = data[pos];
     }
     
-    if marker_pos == 0 && (data[0] != 0xFA || data[1] != 0x01) {
-        return None;  // No marker found
+    // pos now points to the 0 byte ending tags
+    pos += 1; // Skip the 0 byte
+    
+    if pos >= data.len() {
+        return None;
     }
     
-    // FEN starts 8 bytes after marker
-    let fen_start = marker_pos + 8;
+    // Read flags byte
+    let flags = data[pos];
+    pos += 1;
     
-    // Find the FEN end
-    let mut fen_end = fen_start;
-    while fen_end < data.len() && data[fen_end] != 0 {
-        fen_end += 1;
-    }
+    let has_custom_fen = (flags & 1) != 0;
     
-    if fen_end >= data.len() - 1 {
-        return None;  // No room for moves
-    }
-    
-    // Move data starts immediately after FEN null terminator
-    let pos = fen_end + 1;
+    // Read FEN if present
+    let (fen_to_use, starting_move_num) = if has_custom_fen {
+        // Find FEN end (null-terminated)
+        let fen_start = pos;
+        while pos < data.len() && data[pos] != 0 {
+            pos += 1;
+        }
+        
+        if pos >= data.len() {
+            return None;
+        }
+        
+        let fen_bytes = &data[fen_start..pos];
+        let fen_str = String::from_utf8_lossy(fen_bytes);
+        
+        // Extract starting move number from FEN
+        let move_num = fen_str.split_whitespace().last()
+            .and_then(|s| s.parse::<usize>().ok())
+            .unwrap_or(1);
+        
+        pos += 1; // Skip null terminator
+        
+        (fen_str.into_owned(), move_num)
+    } else {
+        (fen.to_string(), 1)
+    };
     
     if pos >= data.len() || data[pos] == ENCODE_END_GAME {
         return None;  // No moves
     }
     
     // Create position from FEN
-    let mut decoder = MoveDecoder::from_fen(fen).ok()?;
-    let is_white = fen.contains(" w ");
+    let mut decoder = MoveDecoder::from_fen(&fen_to_use).ok()?;
+    let is_white = fen_to_use.contains(" w ");
     
     // Parse moves with variations and NAGs
     let mut output = Vec::new();
-    match decode_variation(data, pos, &mut decoder, is_white, 1, &mut output) {
+    match decode_variation(data, pos, &mut decoder, is_white, starting_move_num, &mut output) {
         Ok(_) => {
             if output.is_empty() {
                 None

@@ -1,7 +1,7 @@
 // SCID binary move decoder using shakmaty
 // Decodes moves from SCID's compressed binary format
 
-use shakmaty::{Chess, Color, Move, Piece, Position, Role, Square, EnPassantMode};
+use shakmaty::{Chess, Color, Move, Piece, Position, Role, Square, EnPassantMode, CastlingMode};
 use shakmaty::san::SanPlus;
 
 #[derive(Clone)]
