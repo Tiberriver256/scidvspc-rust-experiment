@@ -459,48 +459,126 @@ fn extract_moves(data: &[u8], gnum: usize, fen: &str) -> Option<String> {
         return None;  // No room for moves
     }
     
-    if gnum == 1 {
-        eprintln!("Game 1: data.len()={}, FEN ends at byte {}", data.len(), fen_end);
-        eprintln!("Next bytes:");
-        for i in 0..5.min(data.len() - fen_end) {
-            if fen_end + i < data.len() {
-                eprintln!("  [{}]: 0x{:02x}", fen_end + i, data[fen_end + i]);
-            }
-        }
-    }
-    
-    // Create position from FEN
-    let mut decoder = MoveDecoder::from_fen(fen).ok()?;
-    
     // Move data starts immediately after FEN null terminator
-    let mut pos = fen_end + 1;
+    let pos = fen_end + 1;
     
     if pos >= data.len() || data[pos] == ENCODE_END_GAME {
         return None;  // No moves
     }
     
-    // Decode moves
-    let mut moves = Vec::new();
-    let mut move_num = 1;
-    let mut is_white = fen.contains(" w ");
+    // Create position from FEN
+    let mut decoder = MoveDecoder::from_fen(fen).ok()?;
+    let is_white = fen.contains(" w ");
+    
+    // Parse moves with variations and NAGs
+    let mut output = Vec::new();
+    match decode_variation(data, pos, &mut decoder, is_white, 1, &mut output) {
+        Ok(_) => {
+            if output.is_empty() {
+                None
+            } else {
+                Some(output.join(" "))
+            }
+        }
+        Err(e) => {
+            eprintln!("Error decoding moves: {}", e);
+            None
+        }
+    }
+}
+
+fn decode_variation(
+    data: &[u8],
+    start_pos: usize,
+    decoder: &mut MoveDecoder,
+    mut is_white: bool,
+    mut move_num: usize,
+    output: &mut Vec<String>,
+) -> Result<usize, String> {
+    let mut pos = start_pos;
+    let mut decoder_before_last_move: Option<MoveDecoder> = None;
+    let mut force_move_number = false; // Set to true after variations
     
     while pos < data.len() {
         let byte_val = data[pos];
         
-        if byte_val == ENCODE_END_GAME {
+        // Check for end markers
+        if byte_val == ENCODE_END_GAME || byte_val == 14 { // END_MARKER
+            pos += 1;
             break;
         }
         
-        // Check if this is a special token (byte values 11-15)
+        // Handle special tokens
         if byte_val >= 11 && byte_val <= 15 {
-            pos += 1;
-            if byte_val == 11 { // NAG
-                pos += 1; // Skip NAG byte
+            match byte_val {
+                11 => { // NAG - output immediately after last move
+                    pos += 1;
+                    if pos < data.len() {
+                        let nag = data[pos];
+                        output.push(format!("${}", nag));
+                        pos += 1;
+                    }
+                }
+                12 => { // COMMENT - skip for now
+                    pos += 1;
+                }
+                13 => { // START_MARKER - variation
+                    pos += 1;
+                    
+                    // Use decoder state from BEFORE the last move
+                    let mut var_decoder = if let Some(ref saved) = decoder_before_last_move {
+                        saved.clone()
+                    } else {
+                        decoder.clone()
+                    };
+                    
+                    // Variation starts with the side to move BEFORE the last move
+                    let var_is_white = !is_white;
+                    
+                    // Variation move number: if we just played black's move (is_white is now true),
+                    // the variation shows the same move number. If we just played white's move
+                    // (is_white is now false), the variation also uses the same move number.
+                    // The key is: we're at position BEFORE last move was made.
+                    // If is_white is currently false, we just played white's move (move_num N)
+                    // So variation starts with N... for black
+                    // If is_white is currently true, we just played black's move (move_num N was incremented)
+                    // So variation starts with (N-1)... for black
+                    let var_move_num = if is_white {
+                        // We just finished black's move and incremented move_num
+                        // Variation is alternative to black's move, so use previous number
+                        move_num - 1
+                    } else {
+                        // We just finished white's move, move_num wasn't incremented yet
+                        // Variation is alternative to white's move
+                        move_num
+                    };
+                    
+                    // Parse variation with position BEFORE last move
+                    let mut var_output = Vec::new();
+                    pos = decode_variation(data, pos, &mut var_decoder, var_is_white, var_move_num, &mut var_output)?;
+                    
+                    // Output variation in parentheses
+                    if !var_output.is_empty() {
+                        output.push(format!("( {} )", var_output.join(" ")));
+                    }
+                    
+                    // After variation, force next move to show move number
+                    force_move_number = true;
+                }
+                15 => { // END_GAME
+                    pos += 1;
+                    break;
+                }
+                _ => {
+                    pos += 1;
+                }
             }
             continue;
         }
         
-        // Regular move
+        // Regular move - save decoder state BEFORE making the move
+        decoder_before_last_move = Some(decoder.clone());
+        
         let piece_num = byte_val >> 4;
         let val = byte_val & 15;
         
@@ -510,12 +588,7 @@ fn extract_moves(data: &[u8], gnum: usize, fen: &str) -> Option<String> {
             let from_sq = piece_list[piece_num as usize];
             if let Some(piece) = decoder.get_board().piece_at(from_sq) {
                 // Queen diagonal move: val == from_file
-                let result = piece.role == shakmaty::Role::Queen && val as u8 == from_sq.file() as u8;
-                if gnum == 1 {
-                    eprintln!("  piece_num={}, val={}, piece={:?}, from_sq={}, from_file={}, needs_second={}", 
-                             piece_num, val, piece.role, from_sq, from_sq.file() as u8, result);
-                }
-                result
+                piece.role == shakmaty::Role::Queen && val as u8 == from_sq.file() as u8
             } else {
                 false
             }
@@ -534,38 +607,37 @@ fn extract_moves(data: &[u8], gnum: usize, fen: &str) -> Option<String> {
                 let san = decoder.move_to_san(&mv);
                 
                 // Apply the move to update position for next iteration
-                if let Err(e) = decoder.apply_move(&mv) {
-                    eprintln!("Failed to apply move: {}", e);
-                    break;
-                }
+                decoder.apply_move(&mv).map_err(|e| format!("Failed to apply move: {}", e))?;
                 
                 let bytes_consumed = if needs_second_byte { 2 } else { 1 };
                 pos += bytes_consumed;
                 
                 // Format with move number
+                let mut move_str = String::new();
                 if is_white {
-                    moves.push(format!("{}.{}", move_num, san));
+                    move_str.push_str(&format!("{}.{}", move_num, san));
                 } else {
-                    if move_num == 1 && moves.is_empty() {
-                        // First move is black's
-                        moves.push(format!("{}...{}", move_num, san));
+                    // Black's move: show "N..." if first move, after variation, or when needed
+                    if move_num == 1 && output.is_empty() || force_move_number {
+                        move_str.push_str(&format!("{}...{}", move_num, san));
                     } else {
-                        moves.push(san);
+                        move_str.push_str(&san);
                     }
+                }
+                
+                output.push(move_str);
+                force_move_number = false;
+                
+                if !is_white {
                     move_num += 1;
                 }
                 is_white = !is_white;
             }
             Err(e) => {
-                eprintln!("Failed to decode move at pos {}: {}", pos, e);
-                break;
+                return Err(format!("Failed to decode move at pos {}: {}", pos, e));
             }
         }
     }
     
-    if moves.is_empty() {
-        None
-    } else {
-        Some(moves.join(" "))
-    }
+    Ok(pos)
 }
