@@ -25,7 +25,13 @@ Rather than building elaborate test infrastructure, we used a **pragmatic, oracl
 
 ```bash
 # Simple snapshot test comparing C++ vs Rust output
-./tkscid extract.tcl bases/matein2 42 > cpp_output.txt
+./tcscid << 'EOF' > cpp_output.txt
+sc_base open bases/matein2
+sc_game load 42
+puts [sc_game pgn]
+exit
+EOF
+
 cargo run --example rust_extractor bases/matein2 42 > rust_output.txt
 diff cpp_output.txt rust_output.txt
 ```
@@ -40,33 +46,27 @@ This gave us:
 
 ### Phase 1: Oracle Setup (Day 1, Hour 1)
 
-We discovered SCID includes `tkscid`, a Tcl-based CLI tool that can extract PGN. This became our oracle:
+We discovered SCID includes `tcscid`, a headless Tcl-based CLI tool that can extract PGN. This became our oracle:
 
 ```bash
 # Build the oracle
 cd /root/repos/scidvspc-code
-make tkscid
+make tcscid
 
-# Create extraction script
-cat > extract.tcl << 'EOF'
-# Load database
-sc_base open [lindex $argv 0]
-
-# Extract game as PGN
-set gnum [lindex $argv 1]
-sc_game load $gnum
-puts "### GAME $gnum ###\n"
+# Test it with inline Tcl commands
+./tcscid << 'EOF'
+sc_base open bases/matein1
+sc_game load 1
+puts -nonewline "### GAME 1 ###\n"
 puts [sc_game pgn]
-puts "\n### END GAME $gnum ###\n"
-
+puts -nonewline "### END GAME 1 ###\n\n"
 exit
 EOF
-
-# Test it
-./tkscid extract.tcl bases/matein1 1
 ```
 
 **Key Insight**: We didn't need to understand the entire C++ codebase - just call the working CLI tool to generate expected output.
+
+**Note**: `tcscid` is the headless version (no Tk GUI dependencies), while `tkscid` requires X11. Either works, but `tcscid` is better for Docker/CI environments.
 
 ### Phase 2: Minimal Rust Implementation (Day 1, Hours 2-4)
 

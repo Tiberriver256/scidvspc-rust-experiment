@@ -1,5 +1,5 @@
 #!/bin/bash
-# Randomized snapshot test - compare Rust output to C++ oracle
+# Randomized snapshot test - compare Rust output to C++ oracle (using tcscid)
 
 set -e
 
@@ -28,33 +28,39 @@ echo "Database: bases/$RANDOM_DB ($MAX_GAMES games)"
 echo "Games: $GAME1, $GAME2, $GAME3"
 echo ""
 
-# Generate oracle (C++)
-timeout 30 ./tkscid extract.tcl bases/$RANDOM_DB $GAME1 $GAME2 $GAME3 2>/dev/null > /tmp/cpp_output.txt || {
-    echo "❌ FAIL: C++ oracle timed out or crashed"
-    exit 1
-}
+ALL_PASS=true
 
-# Generate Rust output
-cd rust-port && cargo run --example rust_extractor ../bases/$RANDOM_DB $GAME1 $GAME2 $GAME3 2>/dev/null > /tmp/rust_output.txt || {
-    echo "❌ FAIL: Rust extractor crashed"
-    exit 1
-}
+for GNUM in $GAME1 $GAME2 $GAME3; do
+    # Generate C++ baseline using tcscid
+    # sc_game pgn includes trailing newline, so we don't add one before ###
+    ./tcscid << EOF > /tmp/cpp_$GNUM.txt 2>/dev/null
+sc_base open bases/$RANDOM_DB
+sc_game load $GNUM
+puts -nonewline "### GAME $GNUM ###\n"
+puts [sc_game pgn]
+puts -nonewline "### END GAME $GNUM ###\n\n"
+exit
+EOF
 
-# Compare
-if diff -u /tmp/cpp_output.txt /tmp/rust_output.txt > /tmp/diff.txt; then
+    # Generate Rust output
+    cargo run --example rust_extractor --manifest-path rust-port/Cargo.toml bases/$RANDOM_DB $GNUM > /tmp/rust_$GNUM.txt 2>/dev/null
+    
+    # Compare
+    if diff -q /tmp/cpp_$GNUM.txt /tmp/rust_$GNUM.txt > /dev/null 2>&1; then
+        echo "✓ Game $GNUM: PASS"
+    else
+        echo "✗ Game $GNUM: FAIL"
+        echo "  Showing diff:"
+        diff -u /tmp/cpp_$GNUM.txt /tmp/rust_$GNUM.txt | head -30
+        ALL_PASS=false
+    fi
+done
+
+echo ""
+if [ "$ALL_PASS" = true ]; then
     echo "✅ PASS: Outputs match perfectly!"
-    echo ""
-    echo "Sample output (first game):"
-    head -15 /tmp/cpp_output.txt
     exit 0
 else
     echo "❌ FAIL: Outputs differ"
-    echo ""
-    echo "Differences:"
-    head -100 /tmp/diff.txt
-    echo ""
-    echo "Full diff saved to /tmp/diff.txt"
-    echo "C++ output: /tmp/cpp_output.txt"
-    echo "Rust output: /tmp/rust_output.txt"
     exit 1
 fi
