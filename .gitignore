@@ -1,7 +1,7 @@
 LumbrasGigabase_Online_si4.7z
 LumbrasGigabase/
 
-# Rust extractor test binaries
-tcscid
-tkscid
+# Rust extractor test binaries (only in root)
+/tcscid
+/tkscid
 *.o
