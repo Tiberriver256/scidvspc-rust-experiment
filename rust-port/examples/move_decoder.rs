@@ -27,14 +27,15 @@ impl MoveDecoder {
     }
     
     fn build_piece_list(chess: &Chess, color: Color) -> Vec<Square> {
-        let mut pieces = Vec::new();
+        let mut pieces = Vec::with_capacity(16);
         
-        // SCID order: pieces in FEN order, but when King is encountered:
-        // - King goes to position 0
-        // - Piece that was at position 0 moves to the end
-        // - All other pieces stay in their positions
+        // SCID builds piece list using AddPiece() during FEN loading
+        // FEN is scanned rank 8→1, file a→h (for both colors)
+        // When King is added via AddPiece():
+        //   - If Count > 0: List[Count] = List[0]; List[0] = King
+        //   - Else: List[0] = King
         
-        // Collect pieces in FEN order (rank 8→1, file a→h)
+        // Scan in FEN order: rank 8→1, file a→h
         for rank in (0..8).rev() {
             for file in 0..8 {
                 let sq = Square::from_coords(
@@ -44,18 +45,17 @@ impl MoveDecoder {
                 if let Some(piece) = chess.board().piece_at(sq) {
                     if piece.color == color {
                         if piece.role == Role::King {
-                            // King goes to position 0
-                            // Move current piece at [0] (if any) to the end
+                            // Simulate C++ AddPiece for King:
+                            // List[Count] = List[0]; List[0] = King; Count++
                             if !pieces.is_empty() {
-                                let first = pieces[0];
-                                pieces.remove(0);
-                                pieces.insert(0, sq);  // King at front
-                                pieces.push(first);     // Old [0] at end
+                                let old_first = pieces[0];
+                                pieces[0] = sq;  // King at position 0
+                                pieces.push(old_first);  // Old [0] at position Count (end)
                             } else {
-                                pieces.push(sq);
+                                pieces.push(sq);  // First piece
                             }
                         } else {
-                            // Non-King: add to end
+                            // Non-King: List[Count++] = sq
                             pieces.push(sq);
                         }
                     }
