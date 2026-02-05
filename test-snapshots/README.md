@@ -55,3 +55,16 @@ done
 All 16 snapshot pairs should match exactly (character-for-character identical).
 
 If there are differences, it indicates a regression in the Rust implementation.
+
+## Known Issues
+
+### Databases "one" and "five"
+
+The databases from https://github.com/nloding/scidtopgn use a different encoding format that is not yet supported by the Rust implementation. These databases use SCID version 512 format which may have different move encoding than the version 400+ format used by our test databases.
+
+Symptoms:
+- Rust outputs no moves (just result)
+- C++ (tcscid) reads them correctly
+- Move decoder throws "Invalid move" errors
+
+This needs further investigation by comparing the binary move encoding between formats.
