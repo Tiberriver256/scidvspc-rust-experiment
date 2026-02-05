@@ -547,24 +547,18 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     };
     
     if pos >= data.len() || data[pos] == ENCODE_END_GAME {
-        eprintln!("DEBUG: Returning None from extract_moves - pos={}, data.len()={}, byte at pos={:02x}", 
-                  pos, data.len(), if pos < data.len() { data[pos] } else { 0xFF });
         return None;  // No moves
     }
     
-    eprintln!("DEBUG: About to create MoveDecoder from FEN: '{}'", fen_to_use);
     
     // Create position from FEN
     let mut decoder = MoveDecoder::from_fen(&fen_to_use).ok()?;
-    eprintln!("DEBUG: MoveDecoder created successfully");
     let is_white = fen_to_use.contains(" w ");
     
     // Parse moves with variations, NAGs, and comments
     // First pass: parse moves and find where comment data starts
     let mut comment_count = 0;
-    eprintln!("DEBUG: Calling count_moves_and_comments at pos={}", pos);
     let comments_start = count_moves_and_comments(data, pos, &mut decoder.clone(), &mut comment_count).ok()?;
-    eprintln!("DEBUG: count_moves_and_comments returned pos={}, comment_count={}", comments_start, comment_count);
     
     // Reset decoder
     decoder = MoveDecoder::from_fen(&fen_to_use).ok()?;
@@ -572,10 +566,8 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
     // Second pass: parse moves and insert comments
     let mut output = Vec::new();
     let mut comment_reader = CommentReader::new(data, comments_start);
-    eprintln!("DEBUG: About to decode variation at pos={}", pos);
     match decode_variation_with_comments_v2(data, pos, &mut decoder, is_white, starting_move_num, &mut output, &mut comment_reader, false) {
         Ok(_) => {
-            eprintln!("DEBUG: decode_variation returned, output.len()={}", output.len());
             if output.is_empty() {
                 None
             } else {
@@ -587,12 +579,10 @@ fn extract_moves(data: &[u8], _gnum: usize, fen: &str) -> Option<String> {
                 } else {
                     output.join(" ")
                 };
-                eprintln!("DEBUG: Returning moves: {}", result);
                 Some(result)
             }
         }
         Err(e) => {
-            eprintln!("DEBUG: Error decoding moves: {}", e);
             None
         }
     }
