@@ -1,0 +1,18 @@
+### GAME 86 ###
+[Event "Baku"]
+[Site ""]
+[Date "1960.??.??"]
+[Round "?"]
+[White "Gassanow"]
+[Black "Arakelow"]
+[Result "0-1"]
+[EventDate "1960.??.??"]
+[Annotator "Tv2H"]
+[SetUp "1"]
+[PlyCount "5"]
+[FEN "r4rk1/1bqnppbp/3p2pB/8/3PP1PP/1P6/1P1Q2B1/1K1R2NR b - - 0 1"]
+
+1...Bxh6 2.Qxh6 Ra1+ ( 2...Qa5 $19 {Alternative} ) 3.Kxa1 Qc2 0-1
+
+### END GAME 86 ###
+

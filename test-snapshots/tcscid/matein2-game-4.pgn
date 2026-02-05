@@ -1,0 +1,16 @@
+### GAME 4 ###
+[Event "matein2"]
+[Site "problem solved"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[SetUp "1"]
+[PlyCount "0"]
+[FEN "4Nb1k/1pp5/p6p/4pP2/PP1pP3/3P1nRp/2P1qPR1/7K w - - 0 1"]
+
+1.Rg8+ Kh7 {Error reading move: Kh7} 2.Nf6# *
+
+### END GAME 4 ###
+

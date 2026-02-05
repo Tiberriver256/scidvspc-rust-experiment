@@ -1,0 +1,16 @@
+### GAME 1 ###
+[Event "matein2"]
+[Site "problem solved"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[SetUp "1"]
+[PlyCount "0"]
+[FEN "3rr3/2p3p1/4N3/3b4/1p3P2/2PBB3/kPQ3PP/3R2K1 w - - 0 1"]
+
+1.b3+ Ka3 2.Ra1# *
+
+### END GAME 1 ###
+

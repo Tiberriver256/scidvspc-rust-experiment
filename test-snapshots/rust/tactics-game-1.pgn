@@ -1,0 +1,18 @@
+### GAME 1 ###
+[Event "?"]
+[Site "problem solved"]
+[Date "1970.??.??"]
+[Round "?"]
+[White "Fischer"]
+[Black "Andersson"]
+[Result "1-0"]
+[EventDate "1970.??.??"]
+[Annotator "T2R"]
+[SetUp "1"]
+[PlyCount "3"]
+[FEN "5q1k/2p3Rp/1p1rnP2/p4p2/2Q5/PP2P3/1B3P1P/7K w - - 0 1"]
+
+1.Qxe6 Rxe6 2.f7 h6 3.Rg8+ Kh7 4.Rxf8 Kg6 1-0
+
+### END GAME 1 ###
+

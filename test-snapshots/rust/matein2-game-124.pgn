@@ -1,0 +1,17 @@
+### GAME 124 ###
+[Event "matein2"]
+[Site "problem solved"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[SetUp "1"]
+[PlyCount "0"]
+[FEN "4k3/5r2/3Q3R/1p1p1p2/p2P4/4PpP1/5P1K/2q5 w - - 0 1"]
+
+{Error reading move: Rf8} 
+1.Re6+ Re7 2.Qxe7# *
+
+### END GAME 124 ###
+

@@ -1,0 +1,18 @@
+### GAME 16 ###
+[Event "Moskau"]
+[Site ""]
+[Date "1964.??.??"]
+[Round "?"]
+[White "Awerbach"]
+[Black "Bebtschuk"]
+[Result "1-0"]
+[EventDate "1964.??.??"]
+[Annotator "T2W"]
+[SetUp "1"]
+[PlyCount "7"]
+[FEN "8/1p4p1/2k2p1p/5P2/4P1PP/3K4/8/8 w - - 0 1"]
+
+1.e5 fxe5 2.g5 hxg5 ( 2...Kd7 3.f6 Ke6 4.fxg7 Kf7 5.gxh6 b5 6.Ke4 b4 7.Kd3 ) 3.f6 gxf6 4.h5 1-0
+
+### END GAME 16 ###
+
