@@ -29,34 +29,85 @@ impl MoveDecoder {
     fn build_piece_list(chess: &Chess, color: Color) -> Vec<Square> {
         let mut pieces = Vec::with_capacity(16);
         
-        // SCID builds piece list using AddPiece() during FEN loading
-        // FEN is scanned rank 8→1, file a→h (for both colors)
-        // When King is added via AddPiece():
-        //   - If Count > 0: List[Count] = List[0]; List[0] = King
-        //   - Else: List[0] = King
+        // Check if this is the standard starting position
+        // SCID uses explicit StdStart() order for standard position, not FEN loading
+        let is_standard_start = {
+            let board = chess.board();
+            // Check key pieces in standard positions
+            board.piece_at(Square::E1) == Some(Piece { color: Color::White, role: Role::King }) &&
+            board.piece_at(Square::E8) == Some(Piece { color: Color::Black, role: Role::King }) &&
+            board.piece_at(Square::A1) == Some(Piece { color: Color::White, role: Role::Rook }) &&
+            board.piece_at(Square::A8) == Some(Piece { color: Color::Black, role: Role::Rook }) &&
+            board.piece_at(Square::A2) == Some(Piece { color: Color::White, role: Role::Pawn }) &&
+            board.piece_at(Square::A7) == Some(Piece { color: Color::Black, role: Role::Pawn })
+            // Could add more checks, but this is sufficient
+        };
         
-        // Scan in FEN order: rank 8→1, file a→h
-        for rank in (0..8).rev() {
-            for file in 0..8 {
-                let sq = Square::from_coords(
-                    shakmaty::File::try_from(file).unwrap(),
-                    shakmaty::Rank::try_from(rank).unwrap()
-                );
-                if let Some(piece) = chess.board().piece_at(sq) {
-                    if piece.color == color {
-                        if piece.role == Role::King {
-                            // Simulate C++ AddPiece for King:
-                            // List[Count] = List[0]; List[0] = King; Count++
-                            if !pieces.is_empty() {
-                                let old_first = pieces[0];
-                                pieces[0] = sq;  // King at position 0
-                                pieces.push(old_first);  // Old [0] at position Count (end)
+        if is_standard_start {
+            // Use explicit C++ StdStart() order
+            // From position.cpp: List[WHITE][0]=E1, List[WHITE][1]=A1, etc.
+            if color == Color::White {
+                pieces.push(Square::E1); // 0: King
+                pieces.push(Square::A1); // 1: Rook
+                pieces.push(Square::B1); // 2: Knight
+                pieces.push(Square::C1); // 3: Bishop
+                pieces.push(Square::D1); // 4: Queen
+                pieces.push(Square::F1); // 5: Bishop
+                pieces.push(Square::G1); // 6: Knight
+                pieces.push(Square::H1); // 7: Rook
+                // 8-15: Pawns a2-h2
+                pieces.push(Square::A2);
+                pieces.push(Square::B2);
+                pieces.push(Square::C2);
+                pieces.push(Square::D2);
+                pieces.push(Square::E2);
+                pieces.push(Square::F2);
+                pieces.push(Square::G2);
+                pieces.push(Square::H2);
+            } else {
+                pieces.push(Square::E8); // 0: King
+                pieces.push(Square::A8); // 1: Rook
+                pieces.push(Square::B8); // 2: Knight
+                pieces.push(Square::C8); // 3: Bishop
+                pieces.push(Square::D8); // 4: Queen
+                pieces.push(Square::F8); // 5: Bishop
+                pieces.push(Square::G8); // 6: Knight
+                pieces.push(Square::H8); // 7: Rook
+                // 8-15: Pawns a7-h7
+                pieces.push(Square::A7);
+                pieces.push(Square::B7);
+                pieces.push(Square::C7);
+                pieces.push(Square::D7);
+                pieces.push(Square::E7);
+                pieces.push(Square::F7);
+                pieces.push(Square::G7);
+                pieces.push(Square::H7);
+            }
+        } else {
+            // For non-standard positions, use FEN loading order with AddPiece logic
+            // Scan in FEN order: rank 8→1, file a→h
+            for rank in (0..8).rev() {
+                for file in 0..8 {
+                    let sq = Square::from_coords(
+                        shakmaty::File::try_from(file).unwrap(),
+                        shakmaty::Rank::try_from(rank).unwrap()
+                    );
+                    if let Some(piece) = chess.board().piece_at(sq) {
+                        if piece.color == color {
+                            if piece.role == Role::King {
+                                // Simulate C++ AddPiece for King:
+                                // List[Count] = List[0]; List[0] = King; Count++
+                                if !pieces.is_empty() {
+                                    let old_first = pieces[0];
+                                    pieces[0] = sq;  // King at position 0
+                                    pieces.push(old_first);  // Old [0] at position Count (end)
+                                } else {
+                                    pieces.push(sq);  // First piece
+                                }
                             } else {
-                                pieces.push(sq);  // First piece
+                                // Non-King: List[Count++] = sq
+                                pieces.push(sq);
                             }
-                        } else {
-                            // Non-King: List[Count++] = sq
-                            pieces.push(sq);
                         }
                     }
                 }

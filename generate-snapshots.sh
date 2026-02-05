@@ -73,3 +73,39 @@ ls -1 test-snapshots/rust/ | wc -l | xargs echo "rust snapshots:"
 echo ""
 echo "To compare a specific game:"
 echo "  diff test-snapshots/tcscid/matein1-game-1.pgn test-snapshots/rust/matein1-game-1.pgn"
+
+# one - real game database from nloding/scidtopgn
+for GNUM in 1; do
+    echo "Generating one game $GNUM..."
+    ./tcscid << TCEOF > test-snapshots/tcscid/one-game-$GNUM.pgn 2>/dev/null
+sc_base open bases/one
+sc_game load $GNUM
+puts -nonewline "### GAME $GNUM ###\n"
+puts [sc_game pgn]
+puts -nonewline "### END GAME $GNUM ###\n\n"
+exit
+TCEOF
+    cargo run --example rust_extractor --manifest-path rust-port/Cargo.toml bases/one $GNUM > test-snapshots/rust/one-game-$GNUM.pgn 2>/dev/null
+done
+
+# five - 5-game test database
+for GNUM in 1 2 3 4 5; do
+    echo "Generating five game $GNUM..."
+    ./tcscid << TCEOF > test-snapshots/tcscid/five-game-$GNUM.pgn 2>/dev/null
+sc_base open bases/five
+sc_game load $GNUM
+puts -nonewline "### GAME $GNUM ###\n"
+puts [sc_game pgn]
+puts -nonewline "### END GAME $GNUM ###\n\n"
+exit
+TCEOF
+    cargo run --example rust_extractor --manifest-path rust-port/Cargo.toml bases/five $GNUM > test-snapshots/rust/five-game-$GNUM.pgn 2>/dev/null
+done
+
+echo ""
+echo "Updated snapshots generated in test-snapshots/"
+echo ""
+echo "Summary:"
+echo "========"
+ls -1 test-snapshots/tcscid/ | wc -l | xargs echo "tcscid snapshots:"
+ls -1 test-snapshots/rust/ | wc -l | xargs echo "rust snapshots:"

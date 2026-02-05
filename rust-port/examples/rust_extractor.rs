@@ -112,6 +112,9 @@ struct IndexEntry {
     event_date_month: u32,
     event_date_day: u32,
     result: u8,  // 0=none, 1=white win, 2=black win, 3=draw
+    white_elo: u16,
+    black_elo: u16,
+    eco_code: u16,
 }
 
 #[derive(Debug)]
@@ -210,7 +213,7 @@ fn read_index(file: &mut File) -> Result<Index, Box<dyn std::error::Error>> {
         let result = ((var_counts >> 12) & 0x0F) as u8;
         
         // EcoCode (2 bytes)
-        let _eco_code = u16::from_be_bytes([entry_data[pos], entry_data[pos+1]]);
+        let eco_code = u16::from_be_bytes([entry_data[pos], entry_data[pos+1]]);
         pos += 2;
         
         // Dates (4 bytes) - contains Date in bits 0-19, EventDate in bits 20-31
@@ -236,6 +239,18 @@ fn read_index(file: &mut File) -> Result<Index, Box<dyn std::error::Error>> {
         } else {
             (date_year as i32 + year_offset as i32 - 4) as u32
         };
+        
+        // WhiteElo (2 bytes) - low 12 bits are Elo, high 4 bits are rating type
+        let white_elo = u16::from_be_bytes([entry_data[pos], entry_data[pos+1]]);
+        pos += 2;
+        
+        // BlackElo (2 bytes) - low 12 bits are Elo, high 4 bits are rating type
+        let black_elo = u16::from_be_bytes([entry_data[pos], entry_data[pos+1]]);
+        pos += 2;
+        
+        // Skip remaining fields (FinalMatSig, NumHalfMoves, HomePawnData)
+        // We've now read 4+2+1+2+1+2+2+1+2+2+2+2+2+4+2+2 = 33 bytes
+        // Entry size is 47, so we skip the last 14 bytes
         
         // Reconstruct full IDs from high/low bytes
         let white_id = ((white_black_high as u32 & 0xF0) << 12) | (white_id_low as u32);
@@ -264,6 +279,9 @@ fn read_index(file: &mut File) -> Result<Index, Box<dyn std::error::Error>> {
             event_date_month,
             event_date_day,
             result,
+            white_elo,
+            black_elo,
+            eco_code,
         });
     }
     
@@ -285,6 +303,42 @@ fn read_namebase(db_path: &str) -> Result<NameBase, Box<dyn std::error::Error>> 
             })
         }
     }
+}
+
+fn decode_eco(eco_code: u16) -> String {
+    if eco_code == 0 {
+        return String::new();
+    }
+    
+    // ECO encoding: Each basic ECO (A00-E99) = 131 codes
+    // Each major letter (A-E) = 13100 codes
+    // Subcode 0 = no extension, 1-130 = extended codes (a, a1-a4, b, b1-b4, ..., z, z1-z4)
+    
+    let major_letter_idx = (eco_code - 1) / 13100;
+    let remainder = (eco_code - 1) % 13100;
+    let minor_number = remainder / 131;
+    let subcode = remainder % 131;
+    
+    let major_letter = char::from(b'A' + major_letter_idx as u8);
+    let mut result = format!("{}{:02}", major_letter, minor_number);
+    
+    if subcode > 0 {
+        // Extended codes: a, a1-a4, b, b1-b4, ..., z, z1-z4
+        // (subcode-1) / 5 = letter offset (0=a, 1=b, etc)
+        // (subcode-1) % 5 = number (0=letter only, 1-4=numbered)
+        let letter_offset = (subcode - 1) / 5;
+        let number = (subcode - 1) % 5;
+        let ext_letter = char::from(b'a' + letter_offset as u8);
+        
+        if number == 0 {
+            result.push(ext_letter);
+        } else {
+            result.push(ext_letter);
+            result.push_str(&number.to_string());
+        }
+    }
+    
+    result
 }
 
 fn extract_pgn(
@@ -336,6 +390,24 @@ fn extract_pgn(
     pgn.push_str(&format!("[Black \"{}\"]\n", black));
     pgn.push_str(&format!("[Result \"{}\"]\n", result_str));
     
+    // Add WhiteElo if present (low 12 bits of white_elo)
+    let white_elo_value = entry.white_elo & 0x0FFF;
+    if white_elo_value > 0 {
+        pgn.push_str(&format!("[WhiteElo \"{}\"]\n", white_elo_value));
+    }
+    
+    // Add BlackElo if present (low 12 bits of black_elo)
+    let black_elo_value = entry.black_elo & 0x0FFF;
+    if black_elo_value > 0 {
+        pgn.push_str(&format!("[BlackElo \"{}\"]\n", black_elo_value));
+    }
+    
+    // Add ECO if present
+    if entry.eco_code > 0 {
+        let eco_str = decode_eco(entry.eco_code);
+        pgn.push_str(&format!("[ECO \"{}\"]\n", eco_str));
+    }
+    
     // Add EventDate if present in tags, otherwise from index
     if let Some(event_date) = tag_decoder.get("EventDate") {
         pgn.push_str(&format!("[EventDate \"{}\"]\n", event_date));
@@ -349,6 +421,31 @@ fn extract_pgn(
     // Add Annotator if present
     if let Some(annotator) = tag_decoder.get("Annotator") {
         pgn.push_str(&format!("[Annotator \"{}\"]\n", annotator));
+    }
+    
+    // Add other tags from game data in C++ output order
+    if let Some(white_title) = tag_decoder.get("WhiteTitle") {
+        pgn.push_str(&format!("[WhiteTitle \"{}\"]\n", white_title));
+    }
+    
+    if let Some(black_title) = tag_decoder.get("BlackTitle") {
+        pgn.push_str(&format!("[BlackTitle \"{}\"]\n", black_title));
+    }
+    
+    if let Some(opening) = tag_decoder.get("Opening") {
+        pgn.push_str(&format!("[Opening \"{}\"]\n", opening));
+    }
+    
+    if let Some(variation) = tag_decoder.get("Variation") {
+        pgn.push_str(&format!("[Variation \"{}\"]\n", variation));
+    }
+    
+    if let Some(white_fide_id) = tag_decoder.get("WhiteFideId") {
+        pgn.push_str(&format!("[WhiteFideId \"{}\"]\n", white_fide_id));
+    }
+    
+    if let Some(black_fide_id) = tag_decoder.get("BlackFideId") {
+        pgn.push_str(&format!("[BlackFideId \"{}\"]\n", black_fide_id));
     }
     
     // Extract FEN first to know if we need SetUp tag
